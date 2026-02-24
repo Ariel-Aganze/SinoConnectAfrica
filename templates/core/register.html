@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer un compte - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen flex items-center justify-center bg-light py-12 px-4">
+    <div class="max-w-2xl w-full">
+        
+        <!-- Logo/Brand -->
+        <div class="text-center mb-8">
+            <a href="{% url 'core:home' %}" class="inline-flex items-center gap-2 text-3xl font-bold text-primary mb-3">
+                <i class="fas fa-ship text-action"></i>
+                <span>SinoConnect</span>
+            </a>
+            <p class="text-gray-600">Créez votre compte et commencez à importer</p>
+        </div>
+        
+        <!-- Registration Form -->
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+            
+            <!-- Benefits -->
+            <div class="bg-light rounded-xl p-4 mb-6">
+                <p class="text-sm font-bold text-primary mb-2">En créant un compte, vous bénéficiez de:</p>
+                <ul class="space-y-1 text-sm text-gray-700">
+                    <li><i class="fas fa-check text-action mr-2"></i> Accès au catalogue complet</li>
+                    <li><i class="fas fa-check text-action mr-2"></i> Demandes de sourcing personnalisées</li>
+                    <li><i class="fas fa-check text-action mr-2"></i> Agent local assigné</li>
+                    <li><i class="fas fa-check text-action mr-2"></i> Suivi de vos commandes</li>
+                </ul>
+            </div>
+            
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mb-6 space-y-3">
+                {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %} border rounded-xl p-4">
+                    <p class="text-sm font-medium">{{ message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+                
+                <!-- Full Name -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Nom complet *</label>
+                    {{ form.full_name }}
+                    {% if form.full_name.errors %}
+                    <p class="text-danger text-xs mt-1">{{ form.full_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Email *</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="text-danger text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- City & Phone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Ville *</label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                        <p class="text-danger text-xs mt-1">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Pour vous assigner un agent local</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Téléphone (WhatsApp)</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                        <p class="text-danger text-xs mt-1">{{ form.phone_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Passwords -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Mot de passe *</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <p class="text-danger text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Confirmer le mot de passe *</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <p class="text-danger text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Password Requirements -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <p class="text-xs text-gray-700 mb-2 font-medium">Votre mot de passe doit:</p>
+                    <ul class="text-xs text-gray-600 space-y-1">
+                        <li>• Contenir au moins 8 caractères</li>
+                        <li>• Ne pas être entièrement numérique</li>
+                        <li>• Ne pas être trop commun</li>
+                    </ul>
+                </div>
+                
+                <!-- Terms -->
+                <div class="flex items-start gap-2">
+                    <input type="checkbox" required class="w-4 h-4 text-action border-gray-300 rounded focus:ring-action mt-1">
+                    <label class="text-sm text-gray-600">
+                        J'accepte les <a href="#" class="text-action hover:underline">conditions d'utilisation</a> et la <a href="#" class="text-action hover:underline">politique de confidentialité</a>
+                    </label>
+                </div>
+                
+                <button type="submit" class="w-full bg-action hover:bg-[#188a5e] text-white font-bold py-4 rounded-xl transition">
+                    Créer mon compte
+                </button>
+            </form>
+            
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-200"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500">ou</span>
+                </div>
+            </div>
+            
+            <!-- Login Link -->
+            <div class="text-center">
+                <p class="text-sm text-gray-600 mb-4">Vous avez déjà un compte?</p>
+                <a href="{% url 'core:login' %}" class="block w-full bg-primary/10 hover:bg-primary text-primary hover:text-white font-bold py-3 rounded-xl transition">
+                    Se connecter
+                </a>
+            </div>
+        </div>
+        
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="{% url 'core:home' %}" class="text-sm text-gray-600 hover:text-primary transition">
+                <i class="fas fa-arrow-left mr-2"></i> Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

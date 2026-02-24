@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<section class="bg-light py-4 border-b border-gray-200">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+            <a href="{% url 'core:home' %}" class="hover:text-action transition">Accueil</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <a href="{% url 'core:product_list' %}" class="hover:text-action transition">Produits</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <a href="{% url 'core:product_list' %}?category={{ product.category.slug }}" class="hover:text-action transition">{{ product.category.name }}</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-primary font-medium">{{ product.name|truncatewords:5 }}</span>
+        </div>
+    </div>
+</section>
+
+<!-- Product Detail -->
+<section class="py-10 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+            
+            <!-- Product Image -->
+            <div>
+                <div class="bg-light rounded-2xl p-8 mb-4 sticky top-6">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-auto object-contain rounded-xl">
+                </div>
+                {% if product.featured %}
+                <div class="flex items-center gap-2 text-sm text-yellow-600 mb-2">
+                    <i class="fas fa-star"></i>
+                    <span class="font-medium">Produit vedette</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Product Info -->
+            <div>
+                <div class="mb-4">
+                    <a href="{% url 'core:product_list' %}?category={{ product.category.slug }}" class="inline-flex items-center gap-2 text-sm text-action hover:underline mb-3">
+                        <i class="{{ product.category.icon }}"></i>
+                        {{ product.category.name }}
+                    </a>
+                    <h1 class="text-3xl md:text-4xl font-bold text-primary mb-4">{{ product.name }}</h1>
+                    
+                    <!-- Stock Status -->
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="{% if product.stock_status == 'IN_STOCK' %}bg-green-50 text-action border-green-100{% elif product.stock_status == 'ON_ORDER' %}bg-yellow-50 text-yellow-600 border-yellow-100{% else %}bg-red-50 text-danger border-red-100{% endif %} px-4 py-2 rounded-full text-sm font-bold border">
+                            {{ product.get_stock_status_display }}
+                        </span>
+                        {% if product.stock_status == 'IN_STOCK' and product.stock_quantity %}
+                        <span class="text-sm text-gray-600">{{ product.stock_quantity }} en stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Price -->
+                <div class="bg-light rounded-2xl p-6 mb-6">
+                    <p class="text-sm text-gray-600 mb-2">Prix</p>
+                    <div class="flex items-baseline gap-3">
+                        <p class="text-4xl font-bold text-primary">
+                            {{ product.get_price_in_currency|floatformat:0 }} <span class="text-2xl">{{ selected_currency.code }}</span>
+                        </p>
+                        {% if selected_currency.code != 'USD' %}
+                        <p class="text-sm text-gray-500">≈ {{ product.price_usd|floatformat:0 }} USD</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div class="mb-6">
+                    <h2 class="font-bold text-xl text-gray-800 mb-3">Description</h2>
+                    <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+                </div>
+                
+                <!-- Actions -->
+                <div class="space-y-3 mb-6">
+                    {% if user.is_authenticated and user.is_client %}
+                    <form method="POST" action="{% url 'client_module:add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" class="w-full bg-action hover:bg-[#188a5e] text-white font-bold py-4 rounded-xl transition text-lg flex items-center justify-center gap-3">
+                            <i class="fas fa-shopping-cart"></i> Ajouter au panier
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'core:login' %}?next={{ request.path }}" class="block w-full bg-action hover:bg-[#188a5e] text-white font-bold py-4 rounded-xl transition text-lg text-center">
+                        <i class="fas fa-shopping-cart mr-2"></i> Ajouter au panier
+                    </a>
+                    {% endif %}
+                    
+                    <a href="https://wa.me/{{ site_settings.whatsapp_number }}?text=Bonjour, je suis intéressé par {{ product.name }} ({{ product.get_price_in_currency|floatformat:0 }} {{ selected_currency.code }})" target="_blank" class="block w-full bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white font-bold py-4 rounded-xl transition text-lg text-center">
+                        <i class="fab fa-whatsapp mr-2"></i> Commander via WhatsApp
+                    </a>
+                </div>
+                
+                <!-- Info Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-light rounded-xl p-4 text-center">
+                        <i class="fas fa-shield-alt text-action text-2xl mb-2"></i>
+                        <p class="text-xs font-medium text-gray-700">Qualité vérifiée</p>
+                    </div>
+                    <div class="bg-light rounded-xl p-4 text-center">
+                        <i class="fas fa-shipping-fast text-action text-2xl mb-2"></i>
+                        <p class="text-xs font-medium text-gray-700">Livraison suivie</p>
+                    </div>
+                    <div class="bg-light rounded-xl p-4 text-center">
+                        <i class="fas fa-headset text-action text-2xl mb-2"></i>
+                        <p class="text-xs font-medium text-gray-700">Support 24/7</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        {% if related_products %}
+        <div class="border-t border-gray-200 pt-12">
+            <h2 class="text-2xl font-bold text-primary mb-8">Produits similaires</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for related_product in related_products %}
+                <div class="bg-white rounded-2xl p-4 shadow-card hover:shadow-soft transition-shadow group flex flex-col h-full">
+                    <div class="bg-[#f0f2f5] rounded-xl h-48 mb-4 relative flex items-center justify-center overflow-hidden">
+                        <img src="{{ related_product.image.url }}" alt="{{ related_product.name }}" class="w-3/4 object-contain group-hover:scale-105 transition-transform duration-500">
+                        <span class="absolute top-2 left-2 {% if related_product.stock_status == 'IN_STOCK' %}bg-action{% else %}bg-danger{% endif %} text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                            {{ related_product.get_stock_status_display }}
+                        </span>
+                    </div>
+                    <div class="flex flex-col flex-1">
+                        <h3 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2 leading-snug">{{ related_product.name }}</h3>
+                        <p class="text-lg font-bold text-primary mt-auto mb-3">
+                            {{ related_product.get_price_in_currency|floatformat:0 }} {{ selected_currency.code }}
+                        </p>
+                        <a href="{% url 'core:product_detail' related_product.slug %}" class="w-full bg-light hover:bg-primary hover:text-white text-primary text-sm font-semibold py-2 rounded-lg transition text-center">
+                            Voir détails
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

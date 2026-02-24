@@ -1,0 +1,91 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Vérifier Paiement{% endblock %}
+{% block page_title %}Vérifier Paiement{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <a href="{% url 'admin_module:payment_verification' %}" class="inline-flex items-center gap-2 text-primary hover:text-danger mb-6 transition">
+        <i class="fas fa-arrow-left"></i> Retour aux paiements
+    </a>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Payment Proof -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-6">Preuve de paiement</h3>
+                {% if payment.proof_image %}
+                <img src="{{ payment.proof_image.url }}" alt="Preuve" class="w-full rounded-xl border-2 border-gray-200 mb-4">
+                <a href="{{ payment.proof_image.url }}" target="_blank" class="text-danger hover:underline text-sm">
+                    <i class="fas fa-external-link-alt mr-1"></i> Ouvrir en taille réelle
+                </a>
+                {% else %}
+                <div class="w-full h-64 bg-light rounded-xl flex items-center justify-center">
+                    <p class="text-gray-400">Aucune preuve fournie</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Payment Details & Actions -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-6">Détails du paiement</h3>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Commande</p>
+                        <p class="font-bold text-gray-800">{{ payment.order.order_code }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Client</p>
+                        <p class="font-bold text-gray-800">{{ payment.user.full_name }}</p>
+                        <p class="text-sm text-gray-600">{{ payment.user.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Montant</p>
+                        <p class="font-bold text-danger text-2xl">${{ payment.amount|floatformat:0 }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Méthode</p>
+                        <p class="font-bold text-gray-800">{{ payment.get_method_display }}</p>
+                    </div>
+                    {% if payment.transaction_reference %}
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Référence transaction</p>
+                        <p class="font-medium text-gray-800">{{ payment.transaction_reference }}</p>
+                    </div>
+                    {% endif %}
+                    {% if payment.notes %}
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Notes du client</p>
+                        <p class="text-sm text-gray-700 bg-light p-3 rounded-lg">{{ payment.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="space-y-3 pt-6 border-t border-gray-200">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="w-full bg-action hover:bg-green-700 text-white font-bold py-4 rounded-xl transition" onclick="return confirm('Confirmer ce paiement?')">
+                            <i class="fas fa-check-circle mr-2"></i> Approuver le paiement
+                        </button>
+                    </form>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <input type="text" name="reason" placeholder="Raison du rejet..." class="w-full bg-light border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-danger transition mb-2">
+                        <button type="submit" class="w-full bg-danger hover:bg-red-700 text-white font-bold py-3 rounded-xl transition" onclick="return confirm('Rejeter ce paiement?')">
+                            <i class="fas fa-times-circle mr-2"></i> Rejeter le paiement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

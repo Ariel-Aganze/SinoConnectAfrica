@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard Admin{% endblock %} - {{ site_settings.site_name }}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#0F2D52',
+                        action: '#1FA774',
+                        light: '#F5F7FA',
+                        danger: '#D64545',
+                        white: '#FFFFFF',
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'card': '0 2px 10px rgba(0,0,0,0.02)',
+                    }
+                }
+            }
+        }
+    </script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="font-sans bg-light text-gray-800 antialiased h-screen flex overflow-hidden">
+
+    <div id="overlay" class="fixed inset-0 bg-primary/50 z-20 hidden lg:hidden"></div>
+
+    {% include 'includes/admin_sidebar.html' %}
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="h-20 bg-white flex items-center justify-between px-6 lg:px-10 z-10 flex-shrink-0 border-b border-gray-100">
+            <div class="flex items-center gap-4">
+                <button id="menu-btn" class="lg:hidden text-primary text-2xl focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="text-xl font-bold text-primary hidden md:block">{% block page_title %}Dashboard Admin{% endblock %}</h1>
+            </div>
+
+            <div class="flex items-center gap-4 md:gap-6">
+                <button onclick="window.location.href='{% url 'core:notifications_list' %}'" class="w-10 h-10 rounded-full bg-action/10 text-action flex items-center justify-center relative shadow-card hover:shadow-soft transition">
+                    <i class="far fa-bell"></i>
+                    {% if unread_notifications_count > 0 %}
+                    <span class="absolute top-2 right-2.5 w-2 h-2 bg-danger rounded-full border-2 border-white"></span>
+                    {% endif %}
+                </button>
+                
+                <div class="flex items-center gap-3 bg-white pl-2 pr-4 py-1.5 rounded-full shadow-card cursor-pointer">
+                    <img src="https://ui-avatars.com/api/?name={{ user.full_name|urlencode }}&background=D64545&color=fff" alt="{{ user.full_name }}" class="w-8 h-8 rounded-full">
+                    <div class="hidden md:block">
+                        <span class="text-sm font-semibold text-primary block">{{ user.full_name }}</span>
+                        <span class="text-xs text-gray-500">Administrateur</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto px-6 lg:px-10 pb-10">
+            {% if messages %}
+            <div class="mt-6 space-y-3">
+                {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %} border rounded-xl p-4 flex items-start gap-3">
+                    <i class="{% if message.tags == 'error' %}fas fa-exclamation-circle{% elif message.tags == 'success' %}fas fa-check-circle{% elif message.tags == 'warning' %}fas fa-exclamation-triangle{% else %}fas fa-info-circle{% endif %} text-lg mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium">{{ message }}</p>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        if (menuBtn && sidebar && overlay) {
+            menuBtn.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

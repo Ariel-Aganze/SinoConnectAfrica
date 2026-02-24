@@ -1,0 +1,139 @@
+{% extends 'client_module/base_client.html' %}
+
+{% block title %}Preuve de paiement - {{ order.order_code }}{% endblock %}
+{% block page_title %}Preuve de paiement{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Back Button -->
+        <a href="{% url 'client_module:order_detail' order.id %}" class="inline-flex items-center gap-2 text-primary hover:text-action mb-6 transition">
+            <i class="fas fa-arrow-left"></i> Retour à la commande
+        </a>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Upload Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl p-6 shadow-card">
+                    <h2 class="text-xl font-bold text-primary mb-6">Envoyer une preuve de paiement</h2>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+                        {% csrf_token %}
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Méthode de paiement *</label>
+                            {{ form.method }}
+                            {% if form.method.errors %}
+                            <p class="text-danger text-xs mt-1">{{ form.method.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Référence de transaction</label>
+                            {{ form.transaction_reference }}
+                            {% if form.transaction_reference.errors %}
+                            <p class="text-danger text-xs mt-1">{{ form.transaction_reference.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">Numéro de reçu, ID de transaction, etc.</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Preuve de paiement (capture d'écran ou photo) *</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-light transition">
+                                {{ form.proof_image }}
+                                <div class="mt-3">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-primary mb-2"></i>
+                                    <p class="text-sm text-gray-600">Cliquez pour sélectionner une image</p>
+                                    <p class="text-xs text-gray-400 mt-1">JPG, PNG - Max 5MB</p>
+                                </div>
+                            </div>
+                            {% if form.proof_image.errors %}
+                            <p class="text-danger text-xs mt-1">{{ form.proof_image.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Notes additionnelles</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <p class="text-danger text-xs mt-1">{{ form.notes.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex gap-4 pt-4">
+                            <button type="submit" class="flex-1 bg-action hover:bg-[#188a5e] text-white font-bold py-4 rounded-xl transition">
+                                Envoyer la preuve
+                            </button>
+                            <a href="{% url 'client_module:order_detail' order.id %}" class="flex-1 bg-light hover:bg-gray-200 text-primary font-bold py-4 rounded-xl transition text-center">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6 mt-6">
+                    <h3 class="font-bold text-primary mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i> Instructions
+                    </h3>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-action mt-1"></i>
+                            <span>Prenez une capture d'écran claire de votre preuve de paiement</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-action mt-1"></i>
+                            <span>Assurez-vous que le montant et la date sont visibles</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-action mt-1"></i>
+                            <span>Notre équipe vérifiera votre paiement sous 24h</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-action mt-1"></i>
+                            <span>Vous recevrez une notification une fois confirmé</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl p-6 shadow-card sticky top-6">
+                    <h3 class="text-lg font-bold text-primary mb-4">Commande {{ order.order_code }}</h3>
+                    
+                    <div class="mb-6 pb-6 border-b border-gray-100">
+                        <p class="text-sm text-gray-500 mb-2">Montant à payer</p>
+                        <p class="text-3xl font-bold text-primary">{{ order.total_amount_local|floatformat:0 }} <span class="text-lg">{{ order.currency_code }}</span></p>
+                    </div>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Statut</span>
+                            <span class="font-medium text-yellow-600">{{ order.get_status_display }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Date commande</span>
+                            <span class="font-medium text-gray-800">{{ order.created_at|date:"d M Y" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Articles</span>
+                            <span class="font-medium text-gray-800">{{ order.get_total_items }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <a href="https://wa.me/{{ site_settings.whatsapp_number }}?text=Bonjour, j'ai des questions sur le paiement de ma commande {{ order.order_code }}" target="_blank" class="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white font-medium py-3 rounded-xl transition text-sm">
+                            <i class="fab fa-whatsapp text-lg"></i> Besoin d'aide?
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

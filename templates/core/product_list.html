@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Nos Produits - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="bg-primary py-12">
+    <div class="container mx-auto px-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">Nos Produits</h1>
+        <p class="text-white/90 text-lg">Découvrez notre sélection de produits importés de Chine</p>
+    </div>
+</section>
+
+<!-- Filters & Products -->
+<section class="py-10 bg-light">
+    <div class="container mx-auto px-4">
+        
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Sidebar Filters -->
+            <aside class="lg:w-64 flex-shrink-0">
+                <div class="bg-white rounded-2xl p-6 shadow-card sticky top-6">
+                    <h2 class="font-bold text-primary mb-4">Filtres</h2>
+                    
+                    <!-- Search -->
+                    <form method="GET" class="mb-6">
+                        <div class="relative">
+                            <input type="text" name="q" value="{{ search_query }}" placeholder="Rechercher..." class="w-full bg-light border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-action transition pl-10">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
+                        </div>
+                        <button type="submit" class="w-full bg-action hover:bg-[#188a5e] text-white py-2 rounded-lg mt-2 text-sm font-medium transition">
+                            Rechercher
+                        </button>
+                    </form>
+                    
+                    <!-- Categories -->
+                    <div class="mb-6">
+                        <h3 class="font-bold text-gray-800 mb-3 text-sm">Catégories</h3>
+                        <div class="space-y-2">
+                            <a href="{% url 'core:product_list' %}" class="block text-sm {% if not selected_category %}text-action font-medium{% else %}text-gray-600 hover:text-action{% endif %} transition">
+                                Toutes les catégories
+                            </a>
+                            {% for category in categories %}
+                            <a href="?category={{ category.slug }}" class="block text-sm {% if selected_category == category.slug %}text-action font-medium{% else %}text-gray-600 hover:text-action{% endif %} transition">
+                                <i class="{{ category.icon }} mr-2"></i> {{ category.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Status -->
+                    <div class="mb-6">
+                        <h3 class="font-bold text-gray-800 mb-3 text-sm">Disponibilité</h3>
+                        <div class="space-y-2">
+                            <a href="{% url 'core:product_list' %}{% if selected_category %}?category={{ selected_category }}{% endif %}" class="block text-sm {% if not stock_status %}text-action font-medium{% else %}text-gray-600 hover:text-action{% endif %} transition">
+                                Tous les produits
+                            </a>
+                            <a href="?status=IN_STOCK{% if selected_category %}&category={{ selected_category }}{% endif %}" class="block text-sm {% if stock_status == 'IN_STOCK' %}text-action font-medium{% else %}text-gray-600 hover:text-action{% endif %} transition">
+                                <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-2"></span> En stock
+                            </a>
+                            <a href="?status=ON_ORDER{% if selected_category %}&category={{ selected_category }}{% endif %}" class="block text-sm {% if stock_status == 'ON_ORDER' %}text-action font-medium{% else %}text-gray-600 hover:text-action{% endif %} transition">
+                                <span class="w-2 h-2 bg-yellow-500 rounded-full inline-block mr-2"></span> Sur commande
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {% if selected_category or search_query or stock_status %}
+                    <a href="{% url 'core:product_list' %}" class="block w-full text-center bg-light hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium transition">
+                        Réinitialiser les filtres
+                    </a>
+                    {% endif %}
+                </div>
+            </aside>
+            
+            <!-- Products Grid -->
+            <div class="flex-1">
+                
+                <!-- Results Info -->
+                <div class="mb-6 flex justify-between items-center">
+                    <p class="text-sm text-gray-600">
+                        {% if products.paginator.count %}
+                            {{ products.paginator.count }} produit{{ products.paginator.count|pluralize }} trouvé{{ products.paginator.count|pluralize }}
+                        {% else %}
+                            Aucun produit trouvé
+                        {% endif %}
+                    </p>
+                </div>
+                
+                {% if products %}
+                <!-- Product Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    {% for product in products %}
+                    <div class="bg-white rounded-2xl p-4 shadow-card hover:shadow-soft transition-shadow group flex flex-col h-full">
+                        <div class="bg-[#f0f2f5] rounded-xl h-48 mb-4 relative flex items-center justify-center overflow-hidden">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-3/4 object-contain group-hover:scale-105 transition-transform duration-500">
+                            <span class="absolute top-2 left-2 {% if product.stock_status == 'IN_STOCK' %}bg-action{% else %}bg-danger{% endif %} text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                                {{ product.get_stock_status_display }}
+                            </span>
+                            {% if product.featured %}
+                            <span class="absolute top-2 right-2 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                                <i class="fas fa-star"></i> Vedette
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <p class="text-xs text-gray-500 mb-1">{{ product.category.name }}</p>
+                            <h3 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2 leading-snug">{{ product.name }}</h3>
+                            <p class="text-lg font-bold text-primary mt-auto mb-3">
+                                {{ product.get_price_in_currency|floatformat:0 }} {{ selected_currency.code }}
+                            </p>
+                            <div class="flex flex-col gap-2 mt-auto">
+                                <a href="{% url 'core:product_detail' product.slug %}" class="w-full bg-light hover:bg-primary hover:text-white text-primary text-sm font-semibold py-2 rounded-lg transition text-center">
+                                    Voir détails
+                                </a>
+                                {% if user.is_authenticated and user.is_client %}
+                                <form method="POST" action="{% url 'client_module:add_to_cart' product.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full bg-action/10 hover:bg-action text-action hover:text-white text-sm font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                                        <i class="fas fa-shopping-cart"></i> Ajouter au panier
+                                    </button>
+                                </form>
+                                {% else %}
+                                <a href="{% url 'core:login' %}?next={% url 'core:product_detail' product.slug %}" class="w-full bg-action/10 hover:bg-action text-action hover:text-white text-sm font-semibold py-2 rounded-lg transition text-center">
+                                    <i class="fas fa-shopping-cart"></i> Ajouter au panier
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if products.has_other_pages %}
+                <div class="flex justify-center gap-2">
+                    {% if products.has_previous %}
+                    <a href="?page={{ products.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if stock_status %}&status={{ stock_status }}{% endif %}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    <span class="px-4 py-2 bg-primary text-white rounded-lg font-medium">
+                        Page {{ products.number }} / {{ products.paginator.num_pages }}
+                    </span>
+                    
+                    {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if stock_status %}&status={{ stock_status }}{% endif %}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <!-- Empty State -->
+                <div class="bg-white rounded-2xl p-12 shadow-card text-center">
+                    <div class="w-24 h-24 bg-light rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-search text-4xl text-gray-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-primary mb-3">Aucun produit trouvé</h2>
+                    <p class="text-gray-600 mb-6">Essayez de modifier vos filtres ou votre recherche</p>
+                    <a href="{% url 'core:product_list' %}" class="inline-flex items-center gap-2 bg-action hover:bg-[#188a5e] text-white font-bold py-3 px-8 rounded-xl transition">
+                        Voir tous les produits
+                    </a>
+                </div>
+                {% endif %}
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends 'client_module/base_client.html' %}
+
+{% block title %}Commande {{ order.order_code }}{% endblock %}
+{% block page_title %}Commande {{ order.order_code }}{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Back Button -->
+        <a href="{% url 'client_module:order_list' %}" class="inline-flex items-center gap-2 text-primary hover:text-action mb-6 transition">
+            <i class="fas fa-arrow-left"></i> Retour à mes commandes
+        </a>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Order Details -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Order Info Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-card">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-primary mb-2">{{ order.order_code }}</h2>
+                            <p class="text-sm text-gray-500">Passée le {{ order.created_at|date:"d F Y à H:i" }}</p>
+                        </div>
+                        <span class="{% if order.status == 'LIVRE' %}bg-green-50 text-action border-green-100{% elif order.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600 border-yellow-100{% elif order.status == 'EXPEDIE' or order.status == 'EN_TRANSIT' %}bg-blue-50 text-primary border-blue-100{% elif order.status == 'PROBLEME' %}bg-red-50 text-danger border-red-100{% else %}bg-gray-50 text-gray-600 border-gray-100{% endif %} px-4 py-2 rounded-full text-sm font-bold border">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <!-- Timeline -->
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full {% if order.created_at %}bg-action text-white{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800">Commande créée</p>
+                                <p class="text-sm text-gray-500">{{ order.created_at|date:"d F Y à H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full {% if order.paid_at %}bg-action text-white{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-{% if order.paid_at %}check{% else %}clock{% endif %}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800">Paiement</p>
+                                {% if order.paid_at %}
+                                <p class="text-sm text-gray-500">Confirmé le {{ order.paid_at|date:"d F Y à H:i" }}</p>
+                                {% else %}
+                                <p class="text-sm text-gray-500">En attente de paiement</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full {% if order.shipped_at %}bg-action text-white{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-{% if order.shipped_at %}check{% else %}clock{% endif %}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800">Expédition</p>
+                                {% if order.shipped_at %}
+                                <p class="text-sm text-gray-500">Expédié le {{ order.shipped_at|date:"d F Y à H:i" }}</p>
+                                {% else %}
+                                <p class="text-sm text-gray-500">En attente d'expédition</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full {% if order.delivered_at %}bg-action text-white{% else %}bg-gray-200 text-gray-400{% endif %} flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-{% if order.delivered_at %}check{% else %}clock{% endif %}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800">Livraison</p>
+                                {% if order.delivered_at %}
+                                <p class="text-sm text-gray-500">Livré le {{ order.delivered_at|date:"d F Y à H:i" }}</p>
+                                {% else %}
+                                <p class="text-sm text-gray-500">En attente de livraison</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Items -->
+                <div class="bg-white rounded-2xl p-6 shadow-card">
+                    <h3 class="text-lg font-bold text-primary mb-6">Articles commandés</h3>
+                    <div class="space-y-4">
+                        {% for item in order_items %}
+                        <div class="flex gap-4 pb-4 border-b border-gray-100 last:border-0">
+                            {% if item.product %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}" class="w-20 h-20 object-cover rounded-lg flex-shrink-0">
+                            {% else %}
+                            <div class="w-20 h-20 bg-light rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-box text-gray-400 text-2xl"></i>
+                            </div>
+                            {% endif %}
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-800 mb-1">{{ item.product_name }}</h4>
+                                <p class="text-sm text-gray-500 mb-2">Quantité: {{ item.quantity }}</p>
+                                <p class="text-sm font-bold text-primary">{{ item.unit_price_usd|floatformat:0 }} USD × {{ item.quantity }} = {{ item.get_subtotal|floatformat:0 }} USD</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Delivery Info -->
+                <div class="bg-white rounded-2xl p-6 shadow-card">
+                    <h3 class="text-lg font-bold text-primary mb-4">Informations de livraison</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-map-marker-alt text-action mt-1"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Adresse</p>
+                                <p class="text-gray-800">{{ order.delivery_address }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-city text-action mt-1"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Ville</p>
+                                <p class="text-gray-800">{{ order.delivery_city }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-phone text-action mt-1"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Téléphone</p>
+                                <p class="text-gray-800">{{ order.delivery_phone }}</p>
+                            </div>
+                        </div>
+                        {% if order.customer_notes %}
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-comment text-action mt-1"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Notes</p>
+                                <p class="text-gray-800">{{ order.customer_notes }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Price Summary -->
+                <div class="bg-white rounded-2xl p-6 shadow-card">
+                    <h3 class="text-lg font-bold text-primary mb-6">Résumé</h3>
+                    <div class="space-y-3 mb-6 pb-6 border-b border-gray-100">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Sous-total</span>
+                            <span class="font-medium text-gray-800">{{ order.total_amount_local|floatformat:0 }} {{ order.currency_code }}</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mb-6">
+                        <span class="font-bold text-gray-800">Total</span>
+                        <span class="font-bold text-2xl text-primary">{{ order.total_amount_local|floatformat:0 }} {{ order.currency_code }}</span>
+                    </div>
+                    
+                    {% if order.status == 'EN_ATTENTE' %}
+                    <a href="{% url 'client_module:upload_payment_proof' order.id %}" class="block w-full bg-action hover:bg-[#188a5e] text-white font-bold py-3 rounded-xl text-center transition mb-3">
+                        Envoyer preuve de paiement
+                    </a>
+                    {% endif %}
+                    
+                    <a href="https://wa.me/{{ site_settings.whatsapp_number }}?text=Bonjour, j'ai une question concernant ma commande {{ order.order_code }}" target="_blank" class="block w-full bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white font-medium py-3 rounded-xl text-center transition text-sm">
+                        <i class="fab fa-whatsapp mr-2"></i> Contacter le support
+                    </a>
+                </div>
+                
+                <!-- Payment Info -->
+                {% if payments %}
+                <div class="bg-white rounded-2xl p-6 shadow-card">
+                    <h3 class="text-lg font-bold text-primary mb-4">Paiements</h3>
+                    <div class="space-y-3">
+                        {% for payment in payments %}
+                        <div class="bg-light rounded-xl p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-sm font-medium text-gray-700">{{ payment.get_method_display }}</span>
+                                <span class="{% if payment.status == 'CONFIRME' %}bg-green-50 text-action border-green-100{% elif payment.status == 'REJETE' %}bg-red-50 text-danger border-red-100{% else %}bg-yellow-50 text-yellow-600 border-yellow-100{% endif %} px-2 py-1 rounded-full text-xs font-medium border">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600">{{ payment.amount|floatformat:0 }} {{ order.currency_code }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ payment.created_at|date:"d M Y" }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

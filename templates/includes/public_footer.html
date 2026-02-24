@@ -1,0 +1,83 @@
+<footer class="bg-primary text-gray-300 py-12 border-t-[8px] border-action">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+            
+            <!-- Logo & Intro -->
+            <div class="lg:col-span-2">
+                <a href="{% url 'core:home' %}" class="text-2xl font-extrabold text-white flex items-center gap-2 tracking-tight mb-4">
+                    <i class="fas fa-ship text-action"></i>
+                    SinoConnect<span class="font-medium text-gray-300">Africa</span>
+                </a>
+                <p class="text-sm text-gray-400 leading-relaxed mb-6 max-w-sm">
+                    "Let's Shop Beyond Boundaries". La plateforme de référence pour connecter les importateurs africains aux meilleures usines en Chine, en toute sécurité.
+                </p>
+                <div class="flex gap-4">
+                    {% if site_settings.facebook_url %}
+                    <a href="{{ site_settings.facebook_url }}" target="_blank" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.twitter_url %}
+                    <a href="{{ site_settings.twitter_url }}" target="_blank" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.youtube_url %}
+                    <a href="{{ site_settings.youtube_url }}" target="_blank" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.instagram_url %}
+                    <a href="{{ site_settings.instagram_url }}" target="_blank" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Entreprise -->
+            <div>
+                <h4 class="text-white font-bold mb-4">Entreprise</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="{% url 'core:about' %}" class="hover:text-action transition">À propos</a></li>
+                    <li><a href="#" class="hover:text-action transition">Notre mission</a></li>
+                    <li><a href="#" class="hover:text-action transition">Carrières</a></li>
+                    <li><a href="#" class="hover:text-action transition">Devenir partenaire</a></li>
+                </ul>
+            </div>
+
+            <!-- Acheter -->
+            <div>
+                <h4 class="text-white font-bold mb-4">Acheter</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="{% url 'core:product_list' %}" class="hover:text-action transition">Produits</a></li>
+                    {% if user.is_authenticated and user.is_client %}
+                    <li><a href="{% url 'client_module:sourcing_request' %}" class="hover:text-action transition">Demande de Sourcing</a></li>
+                    {% endif %}
+                    <li><a href="#comment-ca-marche" class="hover:text-action transition">Comment ça marche</a></li>
+                    <li><a href="#" class="hover:text-action transition">Promotions</a></li>
+                </ul>
+            </div>
+
+            <!-- Support -->
+            <div>
+                <h4 class="text-white font-bold mb-4">Support et Aide</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="{% url 'core:contact' %}" class="hover:text-action transition">Contactez-nous</a></li>
+                    <li><a href="#" class="hover:text-action transition">FAQ</a></li>
+                    <li><a href="#" class="hover:text-action transition">Termes et conditions</a></li>
+                    <li><a href="#" class="hover:text-action transition">Confidentialité</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+            <p>&copy; {% now "Y" %} {{ site_settings.site_name }} – Tous droits réservés.</p>
+            <div class="flex gap-3 text-lg">
+                <i class="fab fa-cc-visa"></i>
+                <i class="fab fa-cc-mastercard"></i>
+            </div>
+        </div>
+    </div>
+</footer>

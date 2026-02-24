@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen bg-light py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-primary mb-2">Notifications</h1>
+                    <p class="text-gray-600">{{ notifications.paginator.count }} notification{{ notifications.paginator.count|pluralize }}</p>
+                </div>
+                {% if unread_notifications_count > 0 %}
+                <a href="?mark_all_read=true" class="bg-action hover:bg-[#188a5e] text-white px-6 py-2.5 rounded-xl font-medium transition text-sm">
+                    Tout marquer comme lu
+                </a>
+                {% endif %}
+            </div>
+            
+            <!-- Notifications List -->
+            {% if notifications %}
+            <div class="space-y-3">
+                {% for notification in notifications %}
+                <a href="{% if notification.link %}{{ notification.link }}{% else %}{% url 'core:mark_notification_read' notification.id %}{% endif %}" class="block bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition {% if not notification.read %}border-l-4 border-action{% endif %}">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 rounded-full {% if notification.type == 'COMMANDE' %}bg-blue-50 text-primary{% elif notification.type == 'SOURCING' %}bg-purple-50 text-purple-600{% elif notification.type == 'MESSAGE_AGENT' %}bg-green-50 text-action{% elif notification.type == 'PAYMENT' %}bg-yellow-50 text-yellow-600{% else %}bg-gray-50 text-gray-600{% endif %} flex items-center justify-center">
+                                <i class="{% if notification.type == 'COMMANDE' %}fas fa-box{% elif notification.type == 'SOURCING' %}fas fa-search-dollar{% elif notification.type == 'MESSAGE_AGENT' %}fas fa-comment{% elif notification.type == 'PAYMENT' %}fas fa-dollar-sign{% else %}fas fa-bell{% endif %} text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="font-bold text-gray-800 {% if not notification.read %}text-primary{% endif %}">{{ notification.title }}</h3>
+                                {% if not notification.read %}
+                                <span class="w-2.5 h-2.5 bg-action rounded-full flex-shrink-0 ml-2"></span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">{{ notification.message }}</p>
+                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                <span><i class="far fa-clock mr-1"></i> {{ notification.created_at|timesince }} ago</span>
+                                <span class="px-2 py-1 bg-light rounded text-gray-600">{{ notification.get_type_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if notifications.has_other_pages %}
+            <div class="flex justify-center gap-2 mt-8">
+                {% if notifications.has_previous %}
+                <a href="?page={{ notifications.previous_page_number }}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                
+                <span class="px-4 py-2 bg-primary text-white rounded-lg font-medium">
+                    Page {{ notifications.number }} / {{ notifications.paginator.num_pages }}
+                </span>
+                
+                {% if notifications.has_next %}
+                <a href="?page={{ notifications.next_page_number }}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <!-- Empty State -->
+            <div class="bg-white rounded-2xl p-12 shadow-card text-center">
+                <div class="w-24 h-24 bg-light rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="far fa-bell text-4xl text-gray-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-primary mb-3">Aucune notification</h2>
+                <p class="text-gray-600 mb-8">Vous n'avez pas encore de notifications</p>
+                <a href="{% url 'core:home' %}" class="inline-flex items-center gap-2 bg-action hover:bg-[#188a5e] text-white font-bold py-3 px-8 rounded-xl transition">
+                    Retour à l'accueil
+                </a>
+            </div>
+            {% endif %}
+            
+        </div>
+    </div>
+</section>
+
+{% endblock %}

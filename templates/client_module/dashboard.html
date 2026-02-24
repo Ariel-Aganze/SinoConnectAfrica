@@ -1,0 +1,208 @@
+{% extends 'client_module/base_client.html' %}
+
+{% block title %}Dashboard Client{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-primary mb-2">Bonjour, {{ user.full_name }} 👋</h2>
+        <p class="text-gray-600">Bienvenue sur votre espace client</p>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Total Orders -->
+        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary text-xl">
+                    <i class="fas fa-box"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-500 uppercase">Total</span>
+            </div>
+            <h3 class="text-3xl font-bold text-primary mb-1">{{ total_orders }}</h3>
+            <p class="text-sm text-gray-600">Commandes passées</p>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-xl">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-500 uppercase">En cours</span>
+            </div>
+            <h3 class="text-3xl font-bold text-yellow-600 mb-1">{{ pending_orders }}</h3>
+            <p class="text-sm text-gray-600">Commandes en cours</p>
+        </div>
+
+        <!-- Completed Orders -->
+        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-action text-xl">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-500 uppercase">Livrées</span>
+            </div>
+            <h3 class="text-3xl font-bold text-action mb-1">{{ completed_orders }}</h3>
+            <p class="text-sm text-gray-600">Commandes livrées</p>
+        </div>
+
+        <!-- Sourcing Requests -->
+        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fas fa-search-dollar"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-500 uppercase">Sourcing</span>
+            </div>
+            <h3 class="text-3xl font-bold text-purple-600 mb-1">{{ pending_sourcing }}</h3>
+            <p class="text-sm text-gray-600">Demandes en attente</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <a href="{% url 'core:product_list' %}" class="bg-gradient-to-br from-primary to-blue-900 rounded-2xl p-6 text-white shadow-card hover:shadow-soft transition group">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg mb-1">Parcourir les produits</h3>
+                    <p class="text-sm text-white/80">Découvrez notre catalogue</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'client_module:sourcing_request_create' %}" class="bg-gradient-to-br from-action to-green-700 rounded-2xl p-6 text-white shadow-card hover:shadow-soft transition group">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg mb-1">Demande de sourcing</h3>
+                    <p class="text-sm text-white/80">Trouvez un produit spécifique</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'client_module:my_agent' %}" class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white shadow-card hover:shadow-soft transition group">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg mb-1">Contacter mon agent</h3>
+                    <p class="text-sm text-white/80">Assistance personnalisée</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Two Columns: Orders + Sourcing -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        
+        <!-- Recent Orders -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-primary">Commandes Récentes</h2>
+                <a href="{% url 'client_module:order_list' %}" class="text-sm text-action font-medium hover:underline">
+                    Voir tout <i class="fas fa-chevron-right text-xs ml-1"></i>
+                </a>
+            </div>
+
+            {% if recent_orders %}
+            <div class="space-y-4">
+                {% for order in recent_orders %}
+                <a href="{% url 'client_module:order_detail' order.id %}" class="block border border-gray-100 rounded-xl p-4 hover:bg-light transition">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-primary">{{ order.order_code }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ order.created_at|date:"d M Y" }}</p>
+                        </div>
+                        <span class="{% if order.status == 'LIVRE' %}bg-green-50 text-action border-green-100{% elif order.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600 border-yellow-100{% elif order.status == 'EXPEDIE' %}bg-blue-50 text-primary border-blue-100{% elif order.status == 'PROBLEME' %}bg-red-50 text-danger border-red-100{% else %}bg-gray-50 text-gray-600 border-gray-100{% endif %} px-3 py-1 rounded-full text-xs font-medium border">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="text-sm font-bold text-gray-800">{{ order.total_amount_local|floatformat:0 }} {{ order.currency_code }}</p>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="fas fa-box-open text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">Aucune commande pour le moment</p>
+                <a href="{% url 'core:product_list' %}" class="text-action font-medium text-sm hover:underline mt-2 inline-block">
+                    Parcourir les produits →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sourcing Requests -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-primary">Demandes de Sourcing</h2>
+                <a href="{% url 'client_module:sourcing_request_list' %}" class="text-sm text-action font-medium hover:underline">
+                    Voir tout <i class="fas fa-chevron-right text-xs ml-1"></i>
+                </a>
+            </div>
+
+            {% if sourcing_requests %}
+            <div class="space-y-4">
+                {% for request in sourcing_requests %}
+                <a href="{% url 'client_module:sourcing_request_detail' request.id %}" class="block border border-gray-100 rounded-xl p-4 hover:bg-light transition">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-primary">{{ request.request_code }}</p>
+                            <p class="text-sm text-gray-700 mt-1">{{ request.product_name|truncatewords:6 }}</p>
+                        </div>
+                        <span class="{% if request.status == 'VALIDE' %}bg-green-50 text-action border-green-100{% elif request.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600 border-yellow-100{% elif request.status == 'DEVIS_ENVOYE' %}bg-blue-50 text-primary border-blue-100{% else %}bg-gray-50 text-gray-600 border-gray-100{% endif %} px-3 py-1 rounded-full text-xs font-medium border">
+                            {{ request.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500">Qté: {{ request.quantity }} • {{ request.created_at|date:"d M Y" }}</p>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="fas fa-search-dollar text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500 mb-2">Aucune demande de sourcing</p>
+                <a href="{% url 'client_module:sourcing_request_create' %}" class="text-action font-medium text-sm hover:underline inline-block">
+                    Créer une demande →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Agent Card -->
+    {% if agent_assignment %}
+    <div class="bg-gradient-to-br from-primary to-blue-900 rounded-2xl p-6 text-white shadow-card">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div class="flex-shrink-0">
+                {% if agent_assignment.agent.avatar %}
+                <img src="{{ agent_assignment.agent.avatar.url }}" alt="{{ agent_assignment.agent.full_name }}" class="w-20 h-20 rounded-full object-cover border-4 border-white/20">
+                {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ agent_assignment.agent.full_name|urlencode }}&background=1FA774&color=fff&size=80" alt="{{ agent_assignment.agent.full_name }}" class="w-20 h-20 rounded-full border-4 border-white/20">
+                {% endif %}
+            </div>
+            <div class="flex-1">
+                <p class="text-sm text-white/80 mb-1">Votre agent local</p>
+                <h3 class="text-2xl font-bold mb-2">{{ agent_assignment.agent.full_name }}</h3>
+                <p class="text-white/90 mb-3"><i class="fas fa-map-marker-alt mr-2"></i>{{ agent_assignment.agent.city }}</p>
+                <a href="https://wa.me/{{ agent_assignment.agent.phone_number }}?text=Bonjour%20{{ agent_assignment.agent.full_name }}" target="_blank" class="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] px-6 py-2.5 rounded-xl font-medium transition">
+                    <i class="fab fa-whatsapp text-lg"></i> Contacter sur WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

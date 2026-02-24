@@ -1,0 +1,114 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Gestion du Sourcing{% endblock %}
+{% block page_title %}Gestion du Sourcing{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl p-6 shadow-card mb-6">
+        <form method="GET" class="flex flex-wrap gap-4">
+            <select name="status" class="flex-1 min-w-[200px] bg-light border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-danger transition">
+                <option value="">Tous les statuts</option>
+                {% for code, label in status_choices %}
+                <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit" class="bg-danger hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition">
+                Filtrer
+            </button>
+        </form>
+    </div>
+
+    <!-- Sourcing Requests Grid -->
+    <div class="grid grid-cols-1 gap-6">
+        {% for request in sourcing_requests %}
+        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition">
+            <div class="flex flex-col md:flex-row gap-6">
+                
+                <!-- Image -->
+                <div class="flex-shrink-0">
+                    {% if request.image %}
+                    <img src="{{ request.image.url }}" alt="{{ request.product_name }}" class="w-32 h-32 object-cover rounded-xl">
+                    {% else %}
+                    <div class="w-32 h-32 bg-light rounded-xl flex items-center justify-center">
+                        <i class="fas fa-image text-4xl text-gray-300"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Info -->
+                <div class="flex-1">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-primary mb-1">{{ request.request_code }}</h3>
+                            <p class="text-gray-800 font-medium">{{ request.product_name }}</p>
+                            <p class="text-sm text-gray-600 mt-1">Client: {{ request.user.full_name }}</p>
+                        </div>
+                        <span class="px-4 py-2 rounded-full text-sm font-medium {% if request.status == 'VALIDE' %}bg-green-50 text-action{% elif request.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600{% elif request.status == 'DEVIS_ENVOYE' %}bg-blue-50 text-primary{% else %}bg-purple-50 text-purple-600{% endif %}">
+                            {{ request.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-4 text-sm mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-boxes text-danger"></i>
+                            <span class="text-gray-700">Qté: <strong>{{ request.quantity }}</strong></span>
+                        </div>
+                        {% if request.budget %}
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-dollar-sign text-danger"></i>
+                            <span class="text-gray-700">Budget: <strong>${{ request.budget|floatformat:0 }}</strong></span>
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar text-danger"></i>
+                            <span class="text-gray-700">{{ request.created_at|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <a href="{% url 'admin_module:sourcing_detail_admin' request.id %}" class="bg-danger hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition text-sm">
+                            Gérer
+                        </a>
+                        {% if request.status == 'EN_ATTENTE' or request.status == 'EN_COURS' %}
+                        <a href="{% url 'admin_module:create_quote' request.id %}" class="bg-action hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition text-sm">
+                            Créer un devis
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white rounded-2xl p-12 shadow-card text-center">
+            <p class="text-gray-500">Aucune demande de sourcing</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if sourcing_requests.has_other_pages %}
+    <div class="flex justify-center gap-2 mt-8">
+        {% if sourcing_requests.has_previous %}
+        <a href="?page={{ sourcing_requests.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        
+        <span class="px-4 py-2 bg-danger text-white rounded-lg font-medium">
+            Page {{ sourcing_requests.number }} / {{ sourcing_requests.paginator.num_pages }}
+        </span>
+        
+        {% if sourcing_requests.has_next %}
+        <a href="?page={{ sourcing_requests.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

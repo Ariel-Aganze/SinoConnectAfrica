@@ -1,0 +1,60 @@
+<aside id="sidebar" class="w-64 bg-primary text-white flex flex-col h-full fixed lg:relative z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    
+    <!-- Logo -->
+    <div class="h-20 flex items-center px-8 border-b border-white/10">
+        <a href="{% url 'core:home' %}" class="text-xl font-bold flex items-center gap-3">
+            <i class="fas fa-ship text-action text-2xl"></i>
+            <span>SinoConnect</span>
+        </a>
+    </div>
+    
+    <!-- Menu -->
+    <nav class="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
+        <a href="{% url 'client_module:dashboard' %}" class="flex items-center gap-3 {% if request.resolver_match.url_name == 'dashboard' %}bg-action text-white{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} px-4 py-3 rounded-xl font-medium transition">
+            <i class="fas fa-th-large w-5"></i> Dashboard
+        </a>
+        
+        <a href="{% url 'core:product_list' %}" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 rounded-xl transition">
+            <i class="fas fa-shopping-bag w-5"></i> Produits
+        </a>
+        
+        <a href="{% url 'client_module:cart' %}" class="flex items-center gap-3 {% if 'cart' in request.path %}bg-action text-white{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} px-4 py-3 rounded-xl font-medium transition relative">
+            <i class="fas fa-shopping-cart w-5"></i> Panier
+            {% if cart_count > 0 %}
+            <span class="ml-auto bg-danger text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ cart_count }}</span>
+            {% endif %}
+        </a>
+        
+        <a href="{% url 'client_module:order_list' %}" class="flex items-center gap-3 {% if 'order' in request.path %}bg-action text-white{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} px-4 py-3 rounded-xl font-medium transition">
+            <i class="fas fa-box w-5"></i> Mes Commandes
+        </a>
+        
+        <a href="{% url 'client_module:sourcing_request_list' %}" class="flex items-center gap-3 {% if 'sourcing' in request.path %}bg-action text-white{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} px-4 py-3 rounded-xl font-medium transition">
+            <i class="fas fa-search-dollar w-5"></i> Sourcing
+        </a>
+        
+        <a href="{% url 'client_module:my_agent' %}" class="flex items-center gap-3 {% if 'agent' in request.path %}bg-action text-white{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} px-4 py-3 rounded-xl font-medium transition">
+            <i class="fas fa-user-tie w-5"></i> Mon Agent
+        </a>
+        
+        <a href="{% url 'core:notifications_list' %}" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 rounded-xl transition relative">
+            <i class="fas fa-bell w-5"></i> Notifications
+            {% if unread_notifications_count > 0 %}
+            <span class="ml-auto bg-danger text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+        
+        <div class="pt-4 border-t border-white/10 mt-4">
+            <a href="{% url 'core:home' %}" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 rounded-xl transition">
+                <i class="fas fa-home w-5"></i> Site Public
+            </a>
+        </div>
+    </nav>
+
+    <!-- Log Out -->
+    <div class="p-4 mb-4 border-t border-white/10">
+        <a href="{% url 'core:logout' %}" class="flex items-center gap-3 text-gray-400 hover:text-white px-4 py-3 transition">
+            <i class="fas fa-sign-out-alt w-5"></i> Déconnexion
+        </a>
+    </div>
+</aside>

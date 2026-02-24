@@ -1,0 +1,186 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Dashboard Administrateur{% endblock %}
+{% block page_title %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-primary mb-2">Vue d'ensemble de la plateforme</h2>
+        <p class="text-gray-600">Statistiques et activité récente</p>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Total Revenue -->
+        <div class="bg-gradient-to-br from-action to-green-700 rounded-2xl p-6 text-white shadow-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded">Total</span>
+            </div>
+            <h3 class="text-3xl font-bold mb-1">${{ total_revenue|floatformat:0 }}</h3>
+            <p class="text-sm text-white/80">Revenus totaux (USD)</p>
+            <p class="text-xs text-white/60 mt-2">+${{ revenue_30d|floatformat:0 }} derniers 30j</p>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary text-xl">
+                    <i class="fas fa-box"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-500">Commandes</span>
+            </div>
+            <h3 class="text-3xl font-bold text-primary mb-1">{{ total_orders }}</h3>
+            <p class="text-sm text-gray-600">Commandes totales</p>
+            <p class="text-xs text-gray-500 mt-2">{{ orders_30d }} derniers 30j</p>
+        </div>
+
+        <!-- Users -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-500">Utilisateurs</span>
+            </div>
+            <h3 class="text-3xl font-bold text-purple-600 mb-1">{{ total_users }}</h3>
+            <p class="text-sm text-gray-600">Clients inscrits</p>
+            <p class="text-xs text-gray-500 mt-2">+{{ new_users_30d }} derniers 30j</p>
+        </div>
+
+        <!-- Pending Actions -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border-l-4 {% if pending_payments > 0 or pending_sourcing > 0 %}border-danger{% else %}border-gray-200{% endif %}">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-danger text-xl">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <span class="text-xs font-medium text-danger">Actions</span>
+            </div>
+            <h3 class="text-3xl font-bold text-danger mb-1">{{ pending_payments|add:pending_sourcing }}</h3>
+            <p class="text-sm text-gray-600">En attente</p>
+            <p class="text-xs text-gray-500 mt-2">{{ pending_payments }} paiements • {{ pending_sourcing }} sourcing</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Commandes en cours</p>
+                    <h3 class="text-2xl font-bold text-primary">{{ pending_orders }}</h3>
+                </div>
+                <i class="fas fa-clock text-2xl text-yellow-500"></i>
+            </div>
+            <div class="w-full bg-light rounded-full h-2">
+                <div class="bg-yellow-500 h-2 rounded-full" style="width: {% widthratio pending_orders total_orders 100 %}%"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Agents actifs</p>
+                    <h3 class="text-2xl font-bold text-primary">{{ total_agents }}</h3>
+                </div>
+                <i class="fas fa-user-tie text-2xl text-action"></i>
+            </div>
+            <p class="text-xs text-gray-600">Gérant {{ total_users }} clients</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Produits</p>
+                    <h3 class="text-2xl font-bold text-primary">{{ total_products }}</h3>
+                </div>
+                <i class="fas fa-shopping-bag text-2xl text-blue-500"></i>
+            </div>
+            <p class="text-xs text-gray-600">{{ out_of_stock }} en rupture</p>
+        </div>
+    </div>
+
+    <!-- Three Columns: Orders, Sourcing, Users -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Recent Orders -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-primary">Commandes Récentes</h2>
+                <a href="{% url 'admin_module:order_management' %}" class="text-sm text-danger font-medium hover:underline">Voir tout</a>
+            </div>
+            <div class="space-y-3">
+                {% for order in recent_orders %}
+                <a href="{% url 'admin_module:order_detail_admin' order.id %}" class="block border border-gray-100 rounded-xl p-3 hover:bg-light transition">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-primary text-sm">{{ order.order_code }}</p>
+                            <p class="text-xs text-gray-500">{{ order.user.full_name }}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full {% if order.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600{% elif order.status == 'LIVRE' %}bg-green-50 text-action{% else %}bg-blue-50 text-primary{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-600">${{ order.total_amount_usd|floatformat:0 }}</p>
+                </a>
+                {% empty %}
+                <p class="text-sm text-gray-500 text-center py-4">Aucune commande</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Sourcing -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-primary">Sourcing Récents</h2>
+                <a href="{% url 'admin_module:sourcing_management' %}" class="text-sm text-danger font-medium hover:underline">Voir tout</a>
+            </div>
+            <div class="space-y-3">
+                {% for request in recent_sourcing %}
+                <a href="{% url 'admin_module:sourcing_detail_admin' request.id %}" class="block border border-gray-100 rounded-xl p-3 hover:bg-light transition">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-primary text-sm">{{ request.request_code }}</p>
+                            <p class="text-xs text-gray-700">{{ request.product_name|truncatewords:4 }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ request.user.full_name }}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full {% if request.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600{% elif request.status == 'VALIDE' %}bg-green-50 text-action{% else %}bg-purple-50 text-purple-600{% endif %}">
+                            {{ request.get_status_display }}
+                        </span>
+                    </div>
+                </a>
+                {% empty %}
+                <p class="text-sm text-gray-500 text-center py-4">Aucune demande</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-primary">Nouveaux Utilisateurs</h2>
+                <a href="{% url 'admin_module:user_management' %}" class="text-sm text-danger font-medium hover:underline">Voir tout</a>
+            </div>
+            <div class="space-y-3">
+                {% for new_user in recent_users %}
+                <div class="flex items-center gap-3 border border-gray-100 rounded-xl p-3">
+                    <img src="https://ui-avatars.com/api/?name={{ new_user.full_name|urlencode }}&background=0F2D52&color=fff&size=40" class="w-10 h-10 rounded-full">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-gray-800 text-sm truncate">{{ new_user.full_name }}</p>
+                        <p class="text-xs text-gray-500">{{ new_user.city }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-500 text-center py-4">Aucun nouveau</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

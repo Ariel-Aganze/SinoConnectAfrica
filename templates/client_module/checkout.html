@@ -1,0 +1,123 @@
+{% extends 'client_module/base_client.html' %}
+
+{% block title %}Passer la commande{% endblock %}
+{% block page_title %}Passer la commande{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <div class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Checkout Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl p-6 shadow-card mb-6">
+                    <h2 class="text-xl font-bold text-primary mb-6">Informations de livraison</h2>
+                    
+                    <form method="POST" class="space-y-5">
+                        {% csrf_token %}
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Adresse de livraison *</label>
+                            {{ form.delivery_address }}
+                            {% if form.delivery_address.errors %}
+                            <p class="text-danger text-xs mt-1">{{ form.delivery_address.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Ville *</label>
+                                {{ form.delivery_city }}
+                                {% if form.delivery_city.errors %}
+                                <p class="text-danger text-xs mt-1">{{ form.delivery_city.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Téléphone *</label>
+                                {{ form.delivery_phone }}
+                                {% if form.delivery_phone.errors %}
+                                <p class="text-danger text-xs mt-1">{{ form.delivery_phone.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Notes additionnelles (optionnel)</label>
+                            {{ form.customer_notes }}
+                            {% if form.customer_notes.errors %}
+                            <p class="text-danger text-xs mt-1">{{ form.customer_notes.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex gap-4 pt-4">
+                            <button type="submit" class="flex-1 bg-action hover:bg-[#188a5e] text-white font-bold py-4 rounded-xl transition">
+                                Confirmer la commande
+                            </button>
+                            <a href="{% url 'client_module:cart' %}" class="flex-1 bg-light hover:bg-gray-200 text-primary font-bold py-4 rounded-xl transition text-center">
+                                Retour au panier
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Payment Instructions -->
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-primary text-xl mt-1"></i>
+                        <div>
+                            <h3 class="font-bold text-primary mb-2">Paiement après confirmation</h3>
+                            <p class="text-sm text-gray-700 mb-2">Après avoir passé votre commande, vous recevrez les instructions de paiement par WhatsApp ou email.</p>
+                            <p class="text-sm text-gray-700">Modes de paiement acceptés: WhatsApp, Virement bancaire, Mobile Money</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl p-6 shadow-card sticky top-6">
+                    <h2 class="text-lg font-bold text-primary mb-6">Résumé de la commande</h2>
+                    
+                    <!-- Cart Items -->
+                    <div class="space-y-3 mb-6 pb-6 border-b border-gray-100 max-h-64 overflow-y-auto">
+                        {% for item in cart.items.all %}
+                        <div class="flex gap-3">
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-16 h-16 object-cover rounded-lg flex-shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-800 truncate">{{ item.product.name }}</p>
+                                <p class="text-xs text-gray-500">Qté: {{ item.quantity }}</p>
+                                <p class="text-sm font-bold text-primary">{{ item.get_subtotal|floatformat:0 }} {{ currency.code }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="space-y-3 mb-6 pb-6 border-b border-gray-100">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Nombre d'articles</span>
+                            <span class="font-medium text-gray-800">{{ cart.get_total_items }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Sous-total</span>
+                            <span class="font-medium text-gray-800">{{ total_price|floatformat:0 }} {{ currency.code }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mb-6">
+                        <span class="font-bold text-gray-800">Total</span>
+                        <span class="font-bold text-2xl text-primary">{{ total_price|floatformat:0 }} {{ currency.code }}</span>
+                    </div>
+                    
+                    <div class="bg-light rounded-xl p-4">
+                        <p class="text-xs text-gray-600 mb-2"><i class="fas fa-shield-alt text-action mr-2"></i>Paiement sécurisé</p>
+                        <p class="text-xs text-gray-600"><i class="fas fa-truck text-action mr-2"></i>Livraison suivie</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
