@@ -3,9 +3,38 @@ Core models for SinoConnect Africa
 Contains User, Currency, Notification, and other shared models
 """
 import uuid
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
+
+
+class UserManager(BaseUserManager):
+    """Custom user manager that uses email instead of username"""
+    
+    def create_user(self, email, password=None, **extra_fields):
+        """Create and save a regular user"""
+        if not email:
+            raise ValueError('L\'adresse email est obligatoire')
+        
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, password=None, **extra_fields):
+        """Create and save a superuser"""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('role', 'ADMIN')
+        
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Le superuser doit avoir is_staff=True')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Le superuser doit avoir is_superuser=True')
+        
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -23,6 +52,10 @@ class User(AbstractUser):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # IMPORTANT: Surcharger email pour le rendre unique
+    email = models.EmailField(unique=True, max_length=254)
+    
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='CLIENT')
     account_type = models.CharField(
         max_length=10, 
@@ -37,6 +70,11 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Manager et configuration
+    objects = UserManager()
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['full_name']
     
     class Meta:
         db_table = 'users'
@@ -203,6 +241,7 @@ class Product(models.Model):
     description = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     price_usd = models.DecimalField(max_digits=10, decimal_places=2)  # Base price in USD
+    discount_price_usd = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Prix promotionnel (optionnel)")
     stock_quantity = models.IntegerField(default=0)
     stock_status = models.CharField(max_length=20, choices=STOCK_STATUS_CHOICES, default='IN_STOCK')
     image = models.ImageField(upload_to='products/')

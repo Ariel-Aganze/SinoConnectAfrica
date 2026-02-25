@@ -1,8 +1,10 @@
 """
 Admin Module Forms
+COMPLETE VERSION
 """
 from django import forms
 from client_module.models import Quote, Payment
+from core.models import Product, Category, User
 
 
 class QuoteForm(forms.ModelForm):
@@ -66,32 +68,130 @@ class QuoteForm(forms.ModelForm):
     )
     
     quote_document = forms.FileField(
-        label='Document de devis (optionnel)',
+        label='Document du devis (PDF)',
         required=False,
         widget=forms.FileInput(attrs={
-            'class': 'w-full text-sm text-gray-800',
-            'accept': '.pdf,.doc,.docx'
+            'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+            'accept': '.pdf'
         })
     )
     
     class Meta:
         model = Quote
-        fields = ['quote_amount_usd', 'currency_code', 'quote_amount_local', 'description', 'delivery_time_days', 'valid_until', 'quote_document']
+        fields = [
+            'quote_amount_usd', 
+            'currency_code', 
+            'quote_amount_local', 
+            'description', 
+            'delivery_time_days', 
+            'valid_until',
+            'quote_document'
+        ]
 
 
-class PaymentVerificationForm(forms.ModelForm):
-    """Form for payment verification"""
+class ProductForm(forms.ModelForm):
+    """Form for product management"""
     
-    admin_notes = forms.CharField(
-        label='Notes administrateur',
+    name = forms.CharField(
+        label='Nom du Produit',
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+            'placeholder': 'Nom du produit'
+        })
+    )
+    
+    description = forms.CharField(
+        label='Description',
         required=False,
         widget=forms.Textarea(attrs={
             'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
-            'placeholder': 'Notes sur la vérification du paiement...',
-            'rows': 3
+            'placeholder': 'Description détaillée du produit...',
+            'rows': 4
+        })
+    )
+    
+    price_usd = forms.DecimalField(
+        label='Prix (USD)',
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+            'placeholder': '0.00',
+            'step': '0.01'
+        })
+    )
+
+    discount_price_usd = forms.DecimalField(
+        label='Prix Promotionnel (USD)',
+        required=False,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+            'placeholder': '0.00 (optionnel)',
+            'step': '0.01'
+        })
+    )
+    
+    category = forms.ModelChoiceField(
+        label='Catégorie',
+        queryset=Category.objects.filter(is_active=True),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition'
+        })
+    )
+    
+    stock_quantity = forms.IntegerField(
+        label='Quantité en Stock',
+        initial=0,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+            'placeholder': '0'
+        })
+    )
+    
+    image = forms.ImageField(
+        label='Image du Produit',
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'w-full text-sm text-gray-800',
+            'accept': 'image/*'
         })
     )
     
     class Meta:
-        model = Payment
-        fields = ['admin_notes']
+        model = Product
+        fields = ['name', 'description', 'price_usd', 'category', 'stock_quantity', 'image', 'featured', 'is_active']
+
+
+class CategoryForm(forms.ModelForm):
+    """Form for creating/editing categories"""
+    
+    class Meta:
+        model = Category
+        fields = ['name', 'icon', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+                'placeholder': 'Nom de la catégorie'
+            }),
+            'icon': forms.TextInput(attrs={
+                'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition',
+                'placeholder': 'Icône (ex: 📱)'
+            }),
+        }
+
+
+class UserRoleForm(forms.ModelForm):
+    """Form for changing user role"""
+    
+    class Meta:
+        model = User
+        fields = ['role', 'is_active']
+        widgets = {
+            'role': forms.Select(attrs={
+                'class': 'w-full bg-light border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm outline-none focus:border-action transition'
+            }),
+        }

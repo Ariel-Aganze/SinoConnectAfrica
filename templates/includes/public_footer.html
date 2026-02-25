@@ -52,7 +52,7 @@
                 <ul class="space-y-2 text-sm">
                     <li><a href="{% url 'core:product_list' %}" class="hover:text-action transition">Produits</a></li>
                     {% if user.is_authenticated and user.is_client %}
-                    <li><a href="{% url 'client_module:sourcing_request' %}" class="hover:text-action transition">Demande de Sourcing</a></li>
+                    <li><a href="{% url 'client_module:sourcing_request_create' %}" class="hover:text-action transition">Demande de Sourcing</a></li>
                     {% endif %}
                     <li><a href="#comment-ca-marche" class="hover:text-action transition">Comment ça marche</a></li>
                     <li><a href="#" class="hover:text-action transition">Promotions</a></li>

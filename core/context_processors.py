@@ -54,3 +54,29 @@ def currency_processor(request):
         'selected_currency': selected_currency,
         'base_currency': base_currency,
     }
+
+
+def currency_processor(request):
+    """Add selected currency to all template contexts"""
+    currency_code = request.session.get('currency', 'USD')
+    
+    try:
+        selected_currency = Currency.objects.get(code=currency_code, is_active=True)
+    except Currency.DoesNotExist:
+        # Fallback to USD
+        try:
+            selected_currency = Currency.objects.get(code='USD', is_active=True)
+        except Currency.DoesNotExist:
+            # Create USD if it doesn't exist
+            selected_currency = Currency.objects.create(
+                code='USD',
+                name='US Dollar',
+                symbol='$',
+                exchange_rate=1.0000,
+                is_base=True,
+                is_active=True
+            )
+    
+    return {
+        'selected_currency': selected_currency,
+    }

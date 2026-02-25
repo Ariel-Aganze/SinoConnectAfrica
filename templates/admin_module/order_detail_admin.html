@@ -1,0 +1,434 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Détails Commande {{ order.order_code }}{% endblock %}
+{% block page_title %}Détails Commande #{{ order.order_code }}{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{% url 'admin_module:order_management' %}" class="inline-flex items-center gap-2 text-primary hover:text-danger transition font-medium">
+            <i class="fas fa-arrow-left"></i>
+            <span>Retour à la liste des commandes</span>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Main Content - Left Side (2 columns) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Order Info Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-primary mb-2">{{ order.order_code }}</h2>
+                        <p class="text-sm text-gray-500">
+                            <i class="far fa-calendar mr-1"></i>
+                            Créée le {{ order.created_at|date:"d/m/Y à H:i" }}
+                        </p>
+                    </div>
+                    <span class="px-4 py-2 rounded-full text-sm font-bold shadow-sm
+                        {% if order.status == 'EN_ATTENTE' %}bg-yellow-100 text-yellow-800 border-2 border-yellow-300
+                        {% elif order.status == 'PAYE' %}bg-blue-100 text-blue-800 border-2 border-blue-300
+                        {% elif order.status == 'PREPARATION' %}bg-purple-100 text-purple-800 border-2 border-purple-300
+                        {% elif order.status == 'EXPEDIE' %}bg-indigo-100 text-indigo-800 border-2 border-indigo-300
+                        {% elif order.status == 'EN_TRANSIT' %}bg-cyan-100 text-cyan-800 border-2 border-cyan-300
+                        {% elif order.status == 'LIVRE' %}bg-green-100 text-green-800 border-2 border-green-300
+                        {% elif order.status == 'ANNULE' %}bg-red-100 text-red-800 border-2 border-red-300
+                        {% else %}bg-gray-100 text-gray-800 border-2 border-gray-300{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Client & Delivery Info Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Client Info -->
+                    <div class="bg-light rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-3">Informations Client</p>
+                        <div class="flex items-start gap-3 mb-3">
+                            <img src="https://ui-avatars.com/api/?name={{ order.user.full_name|urlencode }}&background=0F2D52&color=fff&size=64" 
+                                 alt="{{ order.user.full_name }}" 
+                                 class="w-12 h-12 rounded-full border-2 border-white shadow-sm">
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800">{{ order.user.full_name }}</p>
+                                <p class="text-sm text-gray-600">
+                                    <i class="far fa-envelope mr-1"></i>{{ order.user.email }}
+                                </p>
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-phone mr-1"></i>{{ order.user.phone_number|default:"Non fourni" }}
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{% url 'admin_module:user_detail_admin' order.user.id %}" 
+                           class="text-sm text-danger hover:text-red-700 font-medium">
+                            Voir profil complet →
+                        </a>
+                    </div>
+
+                    <!-- Delivery Info -->
+                    <div class="bg-light rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-3">Informations de Livraison</p>
+                        <div class="space-y-2">
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-phone text-action mt-1"></i>
+                                <div>
+                                    <p class="text-xs text-gray-500">Téléphone</p>
+                                    <p class="font-bold text-gray-800">{{ order.delivery_phone }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-map-marker-alt text-action mt-1"></i>
+                                <div>
+                                    <p class="text-xs text-gray-500">Ville</p>
+                                    <p class="font-bold text-gray-800">{{ order.delivery_city }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-home text-action mt-1"></i>
+                                <div>
+                                    <p class="text-xs text-gray-500">Adresse</p>
+                                    <p class="font-bold text-gray-800">{{ order.delivery_address|default:"Non fournie" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Info -->
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                            <p class="text-sm text-blue-600 mb-1">Montant en USD</p>
+                            <p class="text-2xl font-bold text-blue-800">${{ order.total_amount_usd|floatformat:2 }}</p>
+                        </div>
+                        <div class="bg-danger/5 rounded-xl p-4 border border-danger/20">
+                            <p class="text-sm text-danger mb-1">Montant Local ({{ order.currency_code }})</p>
+                            <p class="text-2xl font-bold text-danger">{{ order.total_amount_local|floatformat:0 }} {{ order.currency_code }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Notes -->
+                {% if order.customer_notes %}
+                <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl">
+                    <p class="text-xs text-yellow-700 font-bold uppercase mb-1">Note du client</p>
+                    <p class="text-sm text-yellow-800">{{ order.customer_notes }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Admin Notes -->
+                {% if order.admin_notes %}
+                <div class="mt-4 bg-purple-50 border-l-4 border-purple-400 p-4 rounded-r-xl">
+                    <p class="text-xs text-purple-700 font-bold uppercase mb-1">Notes Admin</p>
+                    <p class="text-sm text-purple-800">{{ order.admin_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Order Items -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-shopping-cart text-action"></i>
+                    Articles Commandés
+                </h3>
+                <div class="space-y-4">
+                    {% for item in order_items %}
+                    <div class="flex items-center gap-4 border border-gray-100 rounded-xl p-4 hover:shadow-md transition">
+                        {% if item.product and item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}" class="w-20 h-20 object-cover rounded-lg shadow-sm">
+                        {% else %}
+                        <div class="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center shadow-sm">
+                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                        </div>
+                        {% endif %}
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800 mb-1">{{ item.product_name }}</p>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <span><i class="fas fa-box mr-1"></i>Quantité: <strong>{{ item.quantity }}</strong></span>
+                                <span><i class="fas fa-dollar-sign mr-1"></i>Prix unitaire: <strong>${{ item.unit_price_usd|floatformat:2 }}</strong></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500 mb-1">Total</p>
+                            <p class="text-xl font-bold text-primary">${{ item.total_price|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-center py-8">Aucun article dans cette commande</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Order Total -->
+                <div class="mt-6 pt-4 border-t-2 border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-gray-800">TOTAL COMMANDE</span>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold text-danger">{{ order.total_amount_local|floatformat:0 }} {{ order.currency_code }}</p>
+                            <p class="text-sm text-gray-500">${{ order.total_amount_usd|floatformat:2 }} USD</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments History -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-credit-card text-action"></i>
+                    Historique des Paiements
+                </h3>
+                {% if payments %}
+                <div class="space-y-4">
+                    {% for payment in payments %}
+                    <div class="border border-gray-100 rounded-xl p-4 hover:shadow-md transition">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <p class="font-bold text-gray-800">{{ payment.get_method_display }}</p>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                                        {% if payment.status == 'EN_ATTENTE' %}bg-yellow-100 text-yellow-800
+                                        {% elif payment.status == 'CONFIRME' %}bg-green-100 text-green-800
+                                        {% elif payment.status == 'REJETE' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600">
+                                    <i class="far fa-calendar mr-1"></i>{{ payment.created_at|date:"d/m/Y à H:i" }}
+                                </p>
+                                {% if payment.transaction_reference %}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-hashtag mr-1"></i>Réf: {{ payment.transaction_reference }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xl font-bold text-primary">{{ payment.amount|floatformat:0 }} {{ order.currency_code }}</p>
+                            </div>
+                        </div>
+
+                        {% if payment.notes %}
+                        <div class="bg-gray-50 rounded-lg p-3 mb-2">
+                            <p class="text-xs text-gray-500 font-bold mb-1">Notes du client</p>
+                            <p class="text-sm text-gray-700">{{ payment.notes }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if payment.admin_notes %}
+                        <div class="bg-blue-50 rounded-lg p-3 mb-2">
+                            <p class="text-xs text-blue-600 font-bold mb-1">Notes admin</p>
+                            <p class="text-sm text-blue-800">{{ payment.admin_notes }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if payment.verified_by %}
+                        <div class="mt-2 text-xs text-gray-500">
+                            <i class="fas fa-user-check mr-1"></i>
+                            Vérifié par {{ payment.verified_by.full_name }} le {{ payment.verified_at|date:"d/m/Y à H:i" }}
+                        </div>
+                        {% endif %}
+
+                        {% if payment.status == 'EN_ATTENTE' %}
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <a href="{% url 'admin_module:verify_payment' payment.id %}" 
+                               class="inline-flex items-center gap-2 text-danger hover:text-red-700 font-medium text-sm">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Vérifier ce paiement</span>
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if payment.proof_image %}
+                        <div class="mt-3">
+                            <a href="{{ payment.proof_image.url }}" target="_blank" class="inline-block">
+                                <img src="{{ payment.proof_image.url }}" alt="Preuve de paiement" class="max-w-xs rounded-lg border-2 border-gray-200 hover:border-danger transition">
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-receipt text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500">Aucun paiement enregistré pour cette commande</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar - Right Side (1 column) -->
+        <div class="space-y-6">
+            
+            <!-- Update Status -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border-t-4 border-danger">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-sync-alt text-danger"></i>
+                    Mettre à jour le statut
+                </h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    <select name="status" class="w-full bg-light border-2 border-gray-200 rounded-xl p-3.5 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20 transition mb-4 font-medium">
+                        {% for code, label in status_choices %}
+                        <option value="{{ code }}" {% if order.status == code %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="w-full bg-danger hover:bg-red-700 text-white px-6 py-3.5 rounded-xl font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="fas fa-save mr-2"></i>Mettre à jour
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-bolt text-yellow-500"></i>
+                    Actions rapides
+                </h3>
+                <div class="space-y-2">
+                    <a href="mailto:{{ order.user.email }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-envelope text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Contacter le client</span>
+                    </a>
+                    <a href="tel:{{ order.delivery_phone }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-phone text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Appeler le client</span>
+                    </a>
+                    {% if order.status == 'EN_ATTENTE' or order.status == 'PAYE' %}
+                    <button onclick="if(confirm('Êtes-vous sûr de vouloir annuler cette commande ?')) { alert('Fonctionnalité à implémenter'); }" 
+                            class="w-full flex items-center gap-3 px-4 py-3 bg-red-50 hover:bg-red-100 rounded-xl transition group border border-red-200">
+                        <i class="fas fa-ban text-danger"></i>
+                        <span class="text-sm font-medium text-danger">Annuler la commande</span>
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'admin_module:order_management' %}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-list text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Toutes les commandes</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-history text-blue-500"></i>
+                    Chronologie
+                </h3>
+                <div class="space-y-4">
+                    <!-- Order Created -->
+                    <div class="flex gap-3">
+                        <div class="w-10 h-10 rounded-full bg-action/10 flex items-center justify-center flex-shrink-0 border-2 border-action">
+                            <i class="fas fa-check text-action text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">Commande créée</p>
+                            <p class="text-xs text-gray-500">{{ order.created_at|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                    </div>
+
+                    {% if order.paid_at %}
+                    <!-- Payment Confirmed -->
+                    <div class="flex gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 border-2 border-blue-500">
+                            <i class="fas fa-check text-blue-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">Paiement confirmé</p>
+                            <p class="text-xs text-gray-500">{{ order.paid_at|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="flex gap-3 opacity-50">
+                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-300">
+                            <i class="fas fa-clock text-gray-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">En attente de paiement</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.shipped_at %}
+                    <!-- Order Shipped -->
+                    <div class="flex gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0 border-2 border-purple-500">
+                            <i class="fas fa-check text-purple-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">Commande expédiée</p>
+                            <p class="text-xs text-gray-500">{{ order.shipped_at|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="flex gap-3 opacity-50">
+                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-300">
+                            <i class="fas fa-clock text-gray-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">En attente d'expédition</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.delivered_at %}
+                    <!-- Order Delivered -->
+                    <div class="flex gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0 border-2 border-green-500">
+                            <i class="fas fa-check text-green-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">Commande livrée</p>
+                            <p class="text-xs text-gray-500">{{ order.delivered_at|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="flex gap-3 opacity-50">
+                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-300">
+                            <i class="fas fa-clock text-gray-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">En attente de livraison</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Summary Stats -->
+            <div class="bg-gradient-to-br from-primary to-blue-900 rounded-2xl p-6 shadow-card text-white">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-pie"></i>
+                    Résumé
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-blue-100">Nombre d'articles</span>
+                        <span class="font-bold">{{ order_items.count }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-blue-100">Paiements</span>
+                        <span class="font-bold">{{ payments.count }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-blue-100">Devise</span>
+                        <span class="font-bold">{{ order.currency_code }}</span>
+                    </div>
+                    <div class="pt-3 border-t border-white/20">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-blue-100">Total</span>
+                            <span class="text-xl font-bold">{{ order.total_amount_local|floatformat:0 }} {{ order.currency_code }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

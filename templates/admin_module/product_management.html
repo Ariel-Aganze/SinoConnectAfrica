@@ -1,0 +1,726 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Gestion des Produits{% endblock %}
+{% block page_title %}Gestion des Produits{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Header Section -->
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-primary mb-2">Gestion des Produits</h2>
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-shopping-bag mr-1"></i>
+                Gérez le catalogue de produits de la plateforme
+            </p>
+        </div>
+        <div class="flex gap-3">
+            {% if products.paginator.count > 0 %}
+            <div class="bg-green-100 border-2 border-green-300 text-green-800 px-6 py-3 rounded-xl font-bold shadow-sm">
+                <i class="fas fa-box mr-2"></i>
+                {{ products.paginator.count }} produit{{ products.paginator.count|pluralize }}
+            </div>
+            {% endif %}
+            <button onclick="openProductModal()" class="bg-action hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition">
+                <i class="fas fa-plus-circle mr-2"></i>Nouveau Produit
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl p-6 shadow-card mb-6">
+        <form method="GET" class="space-y-4">
+            <!-- First Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Search Input -->
+                <div class="lg:col-span-2">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search_query|default:'' }}" 
+                           placeholder="Rechercher par nom, description..." 
+                           class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20 transition">
+                </div>
+                
+                <!-- Category Filter -->
+                <select name="category" class="bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20 transition">
+                    <option value="">Toutes les catégories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.icon }} {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Second Row -->
+            <div class="flex flex-wrap gap-4">
+                <!-- Stock Status Filter -->
+                <select name="stock_status" class="flex-1 min-w-[200px] bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20 transition">
+                    <option value="">Tous les stocks</option>
+                    {% for code, label in stock_status_choices %}
+                    <option value="{{ code }}" {% if selected_stock_status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                
+                <!-- Filter Button -->
+                <button type="submit" class="bg-danger hover:bg-red-700 text-white px-8 py-3 rounded-xl font-medium transition shadow-sm hover:shadow-md">
+                    <i class="fas fa-filter mr-2"></i>Filtrer
+                </button>
+                
+                <!-- Reset Button -->
+                {% if selected_category or search_query or selected_stock_status %}
+                <a href="{% url 'admin_module:product_management' %}" class="bg-light hover:bg-gray-200 text-gray-700 px-8 py-3 rounded-xl font-medium transition">
+                    <i class="fas fa-times mr-2"></i>Réinitialiser
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Statistics Cards -->
+    {% if products.paginator.count > 0 %}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-check-circle text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Disponible</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">{{ in_stock_count }}</p>
+            <p class="text-xs text-green-100">En stock</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-exclamation-triangle text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Commande</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">{{ on_order_count }}</p>
+            <p class="text-xs text-yellow-100">Sur commande</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-times-circle text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Rupture</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">{{ out_of_stock_count }}</p>
+            <p class="text-xs text-red-100">Indisponible</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-star text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Vedette</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">{{ featured_count }}</p>
+            <p class="text-xs text-purple-100">Mis en avant</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Products Grid/List -->
+    <div class="bg-white rounded-2xl shadow-card overflow-hidden">
+        
+        {% if products %}
+        
+        <!-- Grid View -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+            {% for product in products %}
+            <div class="bg-white rounded-xl border-2 border-gray-200 hover:border-action hover:shadow-lg transition-all overflow-hidden group">
+                <!-- Product Image -->
+                <div class="relative bg-gray-100 aspect-square overflow-hidden">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" 
+                         alt="{{ product.name }}" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                        <i class="fas fa-image text-6xl text-gray-400"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Badges -->
+                    <div class="absolute top-2 left-2 flex flex-col gap-2">
+                        {% if product.featured %}
+                        <span class="px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-full shadow-md">
+                            <i class="fas fa-star mr-1"></i>VEDETTE
+                        </span>
+                        {% endif %}
+                        {% if not product.is_active %}
+                        <span class="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-md">
+                            INACTIF
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Stock Badge -->
+                    <div class="absolute top-2 right-2">
+                        <span class="px-2 py-1 text-xs font-bold rounded-full shadow-md
+                            {% if product.stock_status == 'IN_STOCK' %}bg-green-500 text-white
+                            {% elif product.stock_status == 'LOW_STOCK' %}bg-yellow-500 text-white
+                            {% elif product.stock_status == 'OUT_OF_STOCK' %}bg-red-500 text-white
+                            {% else %}bg-gray-500 text-white{% endif %}">
+                            {% if product.stock_status == 'IN_STOCK' %}<i class="fas fa-check"></i>
+                            {% elif product.stock_status == 'LOW_STOCK' %}<i class="fas fa-exclamation"></i>
+                            {% elif product.stock_status == 'OUT_OF_STOCK' %}<i class="fas fa-times"></i>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="p-4">
+                    <!-- Category -->
+                    {% if product.category %}
+                    <p class="text-xs text-gray-500 mb-1">
+                        {{ product.category.icon }} {{ product.category.name }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Name -->
+                    <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 min-h-[3rem]">
+                        {{ product.name }}
+                    </h3>
+
+                    <!-- Price and Stock -->
+                    <div class="mb-3">
+                        <div class="flex items-baseline gap-2 mb-1">
+                            <span class="text-2xl font-bold text-danger">${{ product.price_usd|floatformat:2 }}</span>
+                            <span class="text-xs text-gray-500">USD</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-600">
+                            <span>
+                                <i class="fas fa-box text-gray-400 mr-1"></i>
+                                Stock: {{ product.stock_quantity }}
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-xs
+                                {% if product.stock_status == 'IN_STOCK' %}bg-green-100 text-green-800
+                                {% elif product.stock_status == 'LOW_STOCK' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ product.get_stock_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Description Preview -->
+                    {% if product.description %}
+                    <p class="text-xs text-gray-600 mb-3 line-clamp-2">
+                        {{ product.description|truncatewords:15 }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="flex gap-2 pt-3 border-t border-gray-100">
+                        <button onclick="editProduct('{{ product.id }}')" 
+                                class="flex-1 bg-action hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition">
+                            <i class="fas fa-edit mr-1"></i>Modifier
+                        </button>
+                        <button onclick="toggleProductStatus('{{ product.id }}', {{ product.is_active|lower }})" 
+                                class="flex-none bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition">
+                            <i class="fas fa-{% if product.is_active %}ban{% else %}check{% endif %}"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-light/30">
+            <p class="text-sm text-gray-600">
+                Affichage de <span class="font-medium">{{ products.start_index }}</span> à 
+                <span class="font-medium">{{ products.end_index }}</span> sur 
+                <span class="font-medium">{{ products.paginator.count }}</span> produit{{ products.paginator.count|pluralize }}
+            </p>
+            <div class="flex gap-2">
+                {% if products.has_previous %}
+                <a href="?page=1{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}" 
+                   class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ products.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}" 
+                   class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-angle-left mr-1"></i>Précédent
+                </a>
+                {% endif %}
+                
+                <span class="px-4 py-2 bg-danger text-white rounded-lg text-sm font-medium">
+                    Page {{ products.number }} / {{ products.paginator.num_pages }}
+                </span>
+                
+                {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}" 
+                   class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Suivant<i class="fas fa-angle-right ml-1"></i>
+                </a>
+                <a href="?page={{ products.paginator.num_pages }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}" 
+                   class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="py-16 px-6 text-center">
+            <div class="max-w-md mx-auto">
+                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shopping-bag text-5xl text-green-600"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Aucun produit trouvé</h3>
+                <p class="text-gray-600 mb-6">
+                    {% if search_query or selected_category or selected_stock_status %}
+                    Aucun produit ne correspond à vos critères de recherche.
+                    {% else %}
+                    Il n'y a actuellement aucun produit dans le catalogue.
+                    {% endif %}
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    {% if search_query or selected_category or selected_stock_status %}
+                    <a href="{% url 'admin_module:product_management' %}" 
+                       class="inline-flex items-center gap-2 bg-danger hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition">
+                        <i class="fas fa-times"></i>
+                        <span>Réinitialiser les filtres</span>
+                    </a>
+                    {% endif %}
+                    <button onclick="openProductModal()" class="inline-flex items-center gap-2 bg-action hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Ajouter un Produit</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Section -->
+    <div class="mt-6 bg-green-50 border-l-4 border-green-500 p-6 rounded-r-xl">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info text-white"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-green-900 mb-2">Gestion du Catalogue</h4>
+                <p class="text-sm text-green-800 mb-3">
+                    Gérez efficacement votre catalogue de produits. Vous pouvez filtrer par catégorie, 
+                    statut de stock, et rechercher des produits spécifiques.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <p class="text-xs text-green-700 font-bold mb-1 flex items-center gap-1">
+                            <i class="fas fa-check-circle"></i>EN STOCK
+                        </p>
+                        <p class="text-sm text-green-900">Produits disponibles pour la vente</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <p class="text-xs text-green-700 font-bold mb-1 flex items-center gap-1">
+                            <i class="fas fa-exclamation-triangle"></i>STOCK BAS
+                        </p>
+                        <p class="text-sm text-green-900">Produits à réapprovisionner bientôt</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <p class="text-xs text-green-700 font-bold mb-1 flex items-center gap-1">
+                            <i class="fas fa-times-circle"></i>RUPTURE
+                        </p>
+                        <p class="text-sm text-green-900">Produits indisponibles actuellement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Product Modal -->
+<div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+            <h3 id="modalTitle" class="text-2xl font-bold text-primary">Nouveau Produit</h3>
+            <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <form id="productForm" method="POST" enctype="multipart/form-data" class="p-6">
+            {% csrf_token %}
+            <input type="hidden" id="product_id" name="product_id" value="">
+            <input type="hidden" name="action" value="save_product">
+
+            <div class="space-y-4">
+                <!-- Product Name -->
+                <div>
+                    <label for="name" class="block text-sm font-bold text-gray-700 mb-2">
+                        Nom du Produit <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           required
+                           class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition"
+                           placeholder="Ex: iPhone 15 Pro Max">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-bold text-gray-700 mb-2">
+                        Description <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="description" 
+                              name="description" 
+                              required
+                              rows="4"
+                              class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition"
+                              placeholder="Description détaillée du produit..."></textarea>
+                </div>
+
+                <!-- Price and Category Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Price USD -->
+                    <div>
+                        <label for="price_usd" class="block text-sm font-bold text-gray-700 mb-2">
+                            Prix USD <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" 
+                               id="price_usd" 
+                               name="price_usd" 
+                               required
+                               step="0.01"
+                               min="0"
+                               class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition"
+                               placeholder="0.00">
+                    </div>
+
+                    <!-- Discount Price USD -->
+                    <div>
+                        <label for="discount_price_usd" class="block text-sm font-bold text-gray-700 mb-2">
+                            Prix Promotionnel USD
+                            <span class="text-xs font-normal text-gray-500">(Optionnel)</span>
+                        </label>
+                        <input type="number" 
+                               id="discount_price_usd" 
+                               name="discount_price_usd"
+                               step="0.01"
+                               min="0"
+                               class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition"
+                               placeholder="Laisser vide si pas de promotion">
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-tag mr-1"></i>
+                            Prix affiché avec réduction si inférieur au prix normal
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Category Row -->
+                <div>
+                    <label for="category" class="block text-sm font-bold text-gray-700 mb-2">
+                        Catégorie
+                    </label>
+                    <select id="category" 
+                            name="category"
+                            class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition">
+                        <option value="">Aucune catégorie</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.icon }} {{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Stock Quantity and Status -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Stock Quantity -->
+                    <div>
+                        <label for="stock_quantity" class="block text-sm font-bold text-gray-700 mb-2">
+                            Quantité en Stock <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" 
+                               id="stock_quantity" 
+                               name="stock_quantity" 
+                               required
+                               min="0"
+                               class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition"
+                               placeholder="0">
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div>
+                        <label for="stock_status" class="block text-sm font-bold text-gray-700 mb-2">
+                            Statut Stock <span class="text-red-500">*</span>
+                        </label>
+                        <select id="stock_status" 
+                                name="stock_status"
+                                required
+                                class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition">
+                            {% for code, label in stock_status_choices %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Main Image Upload -->
+                <div>
+                    <label for="image" class="block text-sm font-bold text-gray-700 mb-2">
+                        Image Principale du Produit
+                    </label>
+                    <input type="file" 
+                           id="image" 
+                           name="image" 
+                           accept="image/*"
+                           class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition">
+                    <p class="text-xs text-gray-500 mt-1">Formats acceptés: JPG, PNG, WebP (Max 5MB)</p>
+                    <div id="currentImage" class="mt-2 hidden">
+                        <p class="text-xs text-gray-600 mb-1">Image actuelle:</p>
+                        <img id="currentImagePreview" src="" alt="Current" class="w-32 h-32 object-cover rounded-lg border-2 border-gray-200">
+                    </div>
+                </div>
+
+                <!-- Additional Images Upload (Multiple) -->
+                <div>
+                    <label for="additional_images" class="block text-sm font-bold text-gray-700 mb-2">
+                        Images Supplémentaires
+                        <span class="text-xs font-normal text-gray-500">(Optionnel)</span>
+                    </label>
+                    <input type="file" 
+                           id="additional_images" 
+                           name="additional_images" 
+                           accept="image/*"
+                           multiple
+                           class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-action transition">
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Vous pouvez sélectionner plusieurs images (Max 5 images, 5MB chacune)
+                    </p>
+                    
+                    <!-- Preview Container for Multiple Images -->
+                    <div id="additionalImagesPreview" class="mt-3 grid grid-cols-4 gap-2 hidden">
+                        <!-- Previews will be inserted here by JavaScript -->
+                    </div>
+                    
+                    <!-- Current Additional Images (when editing) -->
+                    <div id="currentAdditionalImages" class="mt-3 hidden">
+                        <p class="text-xs text-gray-600 mb-2">Images supplémentaires actuelles:</p>
+                        <div id="currentAdditionalImagesGrid" class="grid grid-cols-4 gap-2">
+                            <!-- Current images will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkboxes -->
+                <div class="flex gap-6">
+                    <!-- Featured -->
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" 
+                               id="featured" 
+                               name="featured"
+                               class="w-5 h-5 text-action border-2 border-gray-300 rounded focus:ring-2 focus:ring-action">
+                        <span class="text-sm font-medium text-gray-700">
+                            <i class="fas fa-star text-purple-500 mr-1"></i>Produit Vedette
+                        </span>
+                    </label>
+
+                    <!-- Active -->
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" 
+                               id="is_active" 
+                               name="is_active"
+                               checked
+                               class="w-5 h-5 text-action border-2 border-gray-300 rounded focus:ring-2 focus:ring-action">
+                        <span class="text-sm font-medium text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-1"></i>Actif
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+                <button type="submit" 
+                        class="flex-1 bg-action hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-md">
+                    <i class="fas fa-save mr-2"></i>Enregistrer
+                </button>
+                <button type="button" 
+                        onclick="closeProductModal()"
+                        class="flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-medium transition">
+                    Annuler
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Line clamp utilities */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+
+<script>
+// Open Product Modal (for creating new product)
+function openProductModal() {
+    document.getElementById('productModal').classList.remove('hidden');
+    document.getElementById('modalTitle').textContent = 'Nouveau Produit';
+    document.getElementById('productForm').reset();
+    document.getElementById('product_id').value = '';
+    document.getElementById('discount_price_usd').value = '';  // Reset discount
+    document.getElementById('currentImage').classList.add('hidden');
+    document.getElementById('currentAdditionalImages').classList.add('hidden');
+    document.getElementById('additionalImagesPreview').classList.add('hidden');
+    document.getElementById('is_active').checked = true;
+}
+
+// Close Product Modal
+function closeProductModal() {
+    document.getElementById('productModal').classList.add('hidden');
+}
+
+// Preview Additional Images
+document.getElementById('additional_images').addEventListener('change', function(event) {
+    const files = event.target.files;
+    const previewContainer = document.getElementById('additionalImagesPreview');
+    previewContainer.innerHTML = '';
+    
+    if (files.length > 0) {
+        previewContainer.classList.remove('hidden');
+        
+        // Limit to 5 images
+        const maxFiles = Math.min(files.length, 5);
+        
+        for (let i = 0; i < maxFiles; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'relative';
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-20 object-cover rounded-lg border-2 border-gray-200">
+                    <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">${i + 1}</span>
+                `;
+                previewContainer.appendChild(div);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        if (files.length > 5) {
+            alert('Maximum 5 images supplémentaires. Seules les 5 premières seront utilisées.');
+        }
+    } else {
+        previewContainer.classList.add('hidden');
+    }
+});
+
+// Edit Product
+function editProduct(productId) {
+    // Fetch product data
+    fetch(`/admin/products/get/${productId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const product = data.product;
+                
+                // Open modal
+                document.getElementById('productModal').classList.remove('hidden');
+                document.getElementById('modalTitle').textContent = 'Modifier le Produit';
+                
+                // Fill form
+                document.getElementById('product_id').value = product.id;
+                document.getElementById('name').value = product.name;
+                document.getElementById('description').value = product.description;
+                document.getElementById('price_usd').value = product.price_usd;
+                
+                // IMPORTANT: Fill discount price
+                if (product.discount_price_usd) {
+                    document.getElementById('discount_price_usd').value = product.discount_price_usd;
+                } else {
+                    document.getElementById('discount_price_usd').value = '';
+                }
+                
+                document.getElementById('category').value = product.category_id || '';
+                document.getElementById('stock_quantity').value = product.stock_quantity;
+                document.getElementById('stock_status').value = product.stock_status;
+                document.getElementById('featured').checked = product.featured;
+                document.getElementById('is_active').checked = product.is_active;
+                
+                // Show current main image
+                if (product.image) {
+                    document.getElementById('currentImage').classList.remove('hidden');
+                    document.getElementById('currentImagePreview').src = product.image;
+                }
+                
+                // Show current additional images
+                if (product.additional_images && product.additional_images.length > 0) {
+                    document.getElementById('currentAdditionalImages').classList.remove('hidden');
+                    const grid = document.getElementById('currentAdditionalImagesGrid');
+                    grid.innerHTML = '';
+                    
+                    product.additional_images.forEach((imgUrl, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'relative';
+                        div.innerHTML = `
+                            <img src="${imgUrl}" class="w-full h-20 object-cover rounded-lg border-2 border-gray-200">
+                            <span class="absolute top-1 right-1 bg-blue-500 text-white text-xs px-1 rounded">${index + 1}</span>
+                        `;
+                        grid.appendChild(div);
+                    });
+                }
+            } else {
+                alert('Erreur lors du chargement du produit');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors du chargement du produit');
+        });
+}
+
+// Toggle Product Status
+function toggleProductStatus(productId, isActive) {
+    const action = isActive ? 'désactiver' : 'activer';
+    
+    if (!confirm(`Voulez-vous vraiment ${action} ce produit ?`)) {
+        return;
+    }
+    
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '';
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    form.innerHTML = `
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+        <input type="hidden" name="action" value="toggle_status">
+        <input type="hidden" name="product_id" value="${productId}">
+    `;
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeProductModal();
+    }
+});
+
+// Close modal on background click
+document.getElementById('productModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeProductModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,386 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Profil Utilisateur - {{ user.full_name }}{% endblock %}
+{% block page_title %}Profil Utilisateur{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{% url 'admin_module:user_management' %}" class="inline-flex items-center gap-2 text-primary hover:text-danger transition font-medium">
+            <i class="fas fa-arrow-left"></i>
+            <span>Retour à la liste des utilisateurs</span>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Main Content - Left Side (2 columns) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- User Profile Card -->
+            <div class="bg-white rounded-2xl p-8 shadow-card border-t-4 
+                {% if user.role == 'ADMIN' %}border-red-500
+                {% elif user.role == 'AGENT' %}border-green-500
+                {% else %}border-blue-500{% endif %}">
+                
+                <div class="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
+                    <!-- Avatar -->
+                    <img src="https://ui-avatars.com/api/?name={{ user.full_name|urlencode }}&background={% if user.role == 'ADMIN' %}D64545{% elif user.role == 'AGENT' %}1FA774{% else %}0F2D52{% endif %}&color=fff&size=120" 
+                         alt="{{ user.full_name }}" 
+                         class="w-32 h-32 rounded-full border-4 border-white shadow-xl">
+                    
+                    <!-- User Info -->
+                    <div class="flex-1">
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            <h2 class="text-3xl font-bold text-primary">{{ user.full_name }}</h2>
+                            <span class="px-4 py-1.5 rounded-full text-sm font-bold border-2
+                                {% if user.role == 'ADMIN' %}bg-red-100 text-red-800 border-red-300
+                                {% elif user.role == 'AGENT' %}bg-green-100 text-green-800 border-green-300
+                                {% else %}bg-blue-100 text-blue-800 border-blue-300{% endif %}">
+                                {% if user.role == 'ADMIN' %}<i class="fas fa-user-shield mr-1"></i>
+                                {% elif user.role == 'AGENT' %}<i class="fas fa-user-tie mr-1"></i>
+                                {% else %}<i class="fas fa-user mr-1"></i>
+                                {% endif %}
+                                {{ user.get_role_display }}
+                            </span>
+                            {% if user.account_type == 'PREMIUM' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border-2 border-yellow-300">
+                                <i class="fas fa-crown mr-1"></i>PREMIUM
+                            </span>
+                            {% endif %}
+                            {% if user.is_active %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>Actif
+                            </span>
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i>Inactif
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="space-y-2 text-gray-700">
+                            <p class="flex items-center gap-2">
+                                <i class="far fa-envelope w-5 text-gray-400"></i>
+                                <a href="mailto:{{ user.email }}" class="hover:text-danger transition">{{ user.email }}</a>
+                            </p>
+                            {% if user.phone_number %}
+                            <p class="flex items-center gap-2">
+                                <i class="fas fa-phone w-5 text-gray-400"></i>
+                                <a href="tel:{{ user.phone_number }}" class="hover:text-danger transition">{{ user.phone_number }}</a>
+                            </p>
+                            {% endif %}
+                            {% if user.city %}
+                            <p class="flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt w-5 text-gray-400"></i>
+                                <span>{{ user.city }}</span>
+                            </p>
+                            {% endif %}
+                            <p class="flex items-center gap-2">
+                                <i class="far fa-calendar w-5 text-gray-400"></i>
+                                <span>Membre depuis le {{ user.created_at|date:"d/m/Y" }} ({{ user.created_at|timesince }})</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User ID -->
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <p class="text-xs text-gray-500 uppercase mb-1">ID Utilisateur</p>
+                    <p class="font-mono text-sm text-gray-800">{{ user.id }}</p>
+                </div>
+            </div>
+
+            <!-- Statistics for CLIENT -->
+            {% if user.role == 'CLIENT' %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white shadow-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <i class="fas fa-shopping-cart text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">Total</span>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ total_orders|default:0 }}</p>
+                    <p class="text-sm text-blue-100">Commande{{ total_orders|pluralize }}</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-6 text-white shadow-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <i class="fas fa-dollar-sign text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">USD</span>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">${{ total_spent|default:0|floatformat:0 }}</p>
+                    <p class="text-sm text-green-100">Total Dépensé</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-6 text-white shadow-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <i class="fas fa-search-dollar text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">Sourcing</span>
+                    </div>
+                    <p class="text-3xl font-bold mb-1">{{ sourcing_requests.count|default:0 }}</p>
+                    <p class="text-sm text-purple-100">Demandes</p>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-box text-action"></i>
+                    Commandes Récentes
+                </h3>
+                {% if orders %}
+                <div class="space-y-3">
+                    {% for order in orders %}
+                    <a href="{% url 'admin_module:order_detail_admin' order.id %}" 
+                       class="block border border-gray-100 rounded-xl p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="font-mono text-sm text-primary font-bold">{{ order.order_code }}</p>
+                                <p class="text-xs text-gray-500">{{ order.created_at|date:"d/m/Y à H:i" }}</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium
+                                {% if order.status == 'LIVRE' %}bg-green-100 text-green-800
+                                {% elif order.status == 'EN_ATTENTE' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600">{{ order.items.count }} article{{ order.items.count|pluralize }}</p>
+                            <p class="font-bold text-gray-800">${{ order.total_amount_usd|floatformat:0 }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-8">Aucune commande</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent Sourcing Requests -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-search-dollar text-purple-500"></i>
+                    Demandes de Sourcing Récentes
+                </h3>
+                {% if sourcing_requests %}
+                <div class="space-y-3">
+                    {% for request in sourcing_requests %}
+                    <a href="{% url 'admin_module:sourcing_detail_admin' request.id %}" 
+                       class="block border border-gray-100 rounded-xl p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="font-mono text-sm text-purple-600 font-bold">{{ request.request_code }}</p>
+                                <p class="text-sm font-medium text-gray-800">{{ request.product_name|truncatewords:8 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ request.created_at|date:"d/m/Y" }}</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium
+                                {% if request.status == 'VALIDE' %}bg-green-100 text-green-800
+                                {% elif request.status == 'EN_ATTENTE' %}bg-yellow-100 text-yellow-800
+                                {% elif request.status == 'DEVIS_ENVOYE' %}bg-purple-100 text-purple-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ request.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600">Quantité: {{ request.quantity }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-8">Aucune demande de sourcing</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Assigned Clients for AGENT -->
+            {% if user.role == 'AGENT' %}
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-users text-action"></i>
+                    Clients Assignés ({{ assignments.count }})
+                </h3>
+                {% if assignments %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for assignment in assignments %}
+                    <a href="{% url 'admin_module:user_detail_admin' assignment.client.id %}" 
+                       class="flex items-center gap-3 border border-gray-100 rounded-xl p-4 hover:shadow-md transition">
+                        <img src="https://ui-avatars.com/api/?name={{ assignment.client.full_name|urlencode }}&background=0F2D52&color=fff&size=48" 
+                             alt="{{ assignment.client.full_name }}" 
+                             class="w-12 h-12 rounded-full border-2 border-blue-200">
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">{{ assignment.client.full_name }}</p>
+                            <p class="text-xs text-gray-500">{{ assignment.client.email|truncatechars:30 }}</p>
+                            <p class="text-xs text-gray-400 mt-1">Assigné le {{ assignment.assigned_at|date:"d/m/Y" }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-8">Aucun client assigné</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar - Right Side (1 column) -->
+        <div class="space-y-6">
+            
+            <!-- Account Actions -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border-t-4 border-orange-500">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-orange-500"></i>
+                    Actions du Compte
+                </h3>
+
+                <!-- Toggle Active Status -->
+                <form method="POST" class="mb-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_active">
+                    <button type="submit" 
+                            onclick="return confirm('Êtes-vous sûr de vouloir {% if user.is_active %}désactiver{% else %}activer{% endif %} ce compte ?')"
+                            class="w-full flex items-center justify-center gap-2 
+                                {% if user.is_active %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} 
+                                text-white px-6 py-3 rounded-xl font-bold transition shadow-md">
+                        <i class="fas fa-{% if user.is_active %}ban{% else %}check-circle{% endif %}"></i>
+                        <span>{% if user.is_active %}Désactiver{% else %}Activer{% endif %} le Compte</span>
+                    </button>
+                </form>
+
+                <!-- Change Role -->
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <p class="text-sm font-bold text-gray-700 mb-3">Changer le Rôle</p>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="change_role">
+                        <select name="role" class="w-full bg-white border-2 border-gray-200 rounded-lg px-3 py-2 text-sm mb-3 outline-none focus:border-orange-500">
+                            {% for code, label in role_choices %}
+                            <option value="{{ code }}" {% if user.role == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" 
+                                onclick="return confirm('Êtes-vous sûr de vouloir changer le rôle de cet utilisateur ?')"
+                                class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i>Modifier le Rôle
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-bolt text-yellow-500"></i>
+                    Liens Rapides
+                </h3>
+                <div class="space-y-2">
+                    <a href="mailto:{{ user.email }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-envelope text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Envoyer un Email</span>
+                    </a>
+                    {% if user.phone_number %}
+                    <a href="tel:{{ user.phone_number }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-phone text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Appeler</span>
+                    </a>
+                    {% endif %}
+                    {% if user.role == 'CLIENT' %}
+                    <a href="{% url 'admin_module:order_management' %}?search={{ user.email }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-box text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Toutes ses Commandes</span>
+                    </a>
+                    <a href="{% url 'admin_module:sourcing_management' %}?search={{ user.full_name }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-search-dollar text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Ses Demandes Sourcing</span>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'admin_module:user_management' %}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-users text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Tous les Utilisateurs</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 shadow-card text-white">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i>
+                    Informations
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center pb-2 border-b border-blue-400">
+                        <span class="text-sm text-blue-100">Type de Compte</span>
+                        <span class="font-bold">{{ user.get_account_type_display }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-blue-400">
+                        <span class="text-sm text-blue-100">Statut</span>
+                        <span class="font-bold">{% if user.is_active %}Actif{% else %}Inactif{% endif %}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-blue-400">
+                        <span class="text-sm text-blue-100">Staff</span>
+                        <span class="font-bold">{% if user.is_staff %}Oui{% else %}Non{% endif %}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-blue-400">
+                        <span class="text-sm text-blue-100">Superuser</span>
+                        <span class="font-bold">{% if user.is_superuser %}Oui{% else %}Non{% endif %}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-blue-100">Dernière Connexion</span>
+                        <span class="font-bold text-sm">
+                            {% if user.last_login %}
+                            {{ user.last_login|date:"d/m/Y" }}
+                            {% else %}
+                            Jamais
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning -->
+            {% if not user.is_active %}
+            <div class="bg-red-50 rounded-2xl p-6 border-2 border-red-200">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                    <div>
+                        <h4 class="font-bold text-red-900 mb-2">Compte Désactivé</h4>
+                        <p class="text-sm text-red-800">
+                            Ce compte est actuellement désactivé. L'utilisateur ne peut pas se connecter à la plateforme.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tips -->
+            <div class="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+                <h4 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-yellow-500"></i>
+                    Conseils
+                </h4>
+                <ul class="text-sm text-purple-800 space-y-2">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-purple-600 mt-0.5"></i>
+                        <span>Désactivez un compte pour empêcher l'accès temporairement</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-purple-600 mt-0.5"></i>
+                        <span>Le changement de rôle prend effet immédiatement</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-purple-600 mt-0.5"></i>
+                        <span>Contactez l'utilisateur avant des actions importantes</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

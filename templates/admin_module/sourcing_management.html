@@ -6,109 +6,304 @@
 {% block content %}
 <div class="py-6">
     
+    <!-- Header Section -->
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-primary mb-2">Demandes de Sourcing</h2>
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-search-dollar mr-1"></i>
+                Gérez toutes les demandes de sourcing des clients
+            </p>
+        </div>
+        {% if sourcing_requests.paginator.count > 0 %}
+        <div class="bg-purple-100 border-2 border-purple-300 text-purple-800 px-6 py-3 rounded-xl font-bold shadow-sm">
+            <i class="fas fa-list mr-2"></i>
+            {{ sourcing_requests.paginator.count }} demande{{ sourcing_requests.paginator.count|pluralize }}
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Filters -->
     <div class="bg-white rounded-2xl p-6 shadow-card mb-6">
         <form method="GET" class="flex flex-wrap gap-4">
-            <select name="status" class="flex-1 min-w-[200px] bg-light border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-danger transition">
+            <!-- Search Input -->
+            <div class="flex-1 min-w-[300px]">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query|default:'' }}" 
+                       placeholder="Rechercher par code, produit, client..." 
+                       class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20 transition">
+            </div>
+            
+            <!-- Status Filter -->
+            <select name="status" class="bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-danger focus:ring-2 focus:ring-danger/20 transition min-w-[200px]">
                 <option value="">Tous les statuts</option>
                 {% for code, label in status_choices %}
                 <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
             
-            <button type="submit" class="bg-danger hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition">
-                Filtrer
+            <!-- Filter Button -->
+            <button type="submit" class="bg-danger hover:bg-red-700 text-white px-8 py-3 rounded-xl font-medium transition shadow-sm hover:shadow-md">
+                <i class="fas fa-filter mr-2"></i>Filtrer
             </button>
+            
+            <!-- Reset Button -->
+            {% if selected_status or search_query %}
+            <a href="{% url 'admin_module:sourcing_management' %}" class="bg-light hover:bg-gray-200 text-gray-700 px-8 py-3 rounded-xl font-medium transition">
+                <i class="fas fa-times mr-2"></i>Réinitialiser
+            </a>
+            {% endif %}
         </form>
     </div>
 
-    <!-- Sourcing Requests Grid -->
-    <div class="grid grid-cols-1 gap-6">
-        {% for request in sourcing_requests %}
-        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-soft transition">
-            <div class="flex flex-col md:flex-row gap-6">
+    <!-- Statistics Cards -->
+    {% if sourcing_requests.paginator.count > 0 %}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-clock text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">En attente</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">
+                {% with en_attente=sourcing_requests.object_list|length %}{{ en_attente }}{% endwith %}
+            </p>
+            <p class="text-xs text-yellow-100">Demandes à traiter</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-file-invoice text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Devis envoyé</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">-</p>
+            <p class="text-xs text-blue-100">Avec devis</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-check-circle text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Validé</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">-</p>
+            <p class="text-xs text-green-100">Demandes validées</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-5 text-white shadow-card">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fas fa-chart-line text-2xl opacity-80"></i>
+                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Total</span>
+            </div>
+            <p class="text-2xl font-bold mb-1">{{ sourcing_requests.paginator.count }}</p>
+            <p class="text-xs text-purple-100">Toutes demandes</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sourcing Requests Table -->
+    <div class="bg-white rounded-2xl shadow-card overflow-hidden">
+        
+        {% if sourcing_requests %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gradient-to-r from-purple-600 to-purple-800 text-white">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Code Demande</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Client</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Produit Recherché</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Quantité</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Budget</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for request in sourcing_requests %}
+                    <tr class="hover:bg-purple-50/30 transition-colors">
+                        <!-- Request Code -->
+                        <td class="px-6 py-4">
+                            <span class="font-mono text-sm text-primary font-bold">{{ request.request_code }}</span>
+                        </td>
+
+                        <!-- Client Info -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <img src="https://ui-avatars.com/api/?name={{ request.user.full_name|urlencode }}&background=9333EA&color=fff&size=32" 
+                                     alt="{{ request.user.full_name }}" 
+                                     class="w-8 h-8 rounded-full border border-purple-200">
+                                <div>
+                                    <p class="font-medium text-gray-800 text-sm">{{ request.user.full_name }}</p>
+                                    <p class="text-xs text-gray-500">{{ request.user.email|truncatechars:25 }}</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Product Info -->
+                        <td class="px-6 py-4">
+                            <div class="max-w-xs">
+                                <p class="font-bold text-gray-800 text-sm mb-1 truncate">{{ request.product_name }}</p>
+                                {% if request.product_description %}
+                                <p class="text-xs text-gray-500 truncate">{{ request.product_description|truncatewords:10 }}</p>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Quantity -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-boxes text-gray-400 text-sm"></i>
+                                <span class="font-semibold text-gray-800">{{ request.quantity }}</span>
+                            </div>
+                        </td>
+
+                        <!-- Budget -->
+                        <td class="px-6 py-4">
+                            {% if request.budget %}
+                            <div>
+                                <p class="font-bold text-gray-800">${{ request.budget|floatformat:0 }}</p>
+                                <p class="text-xs text-gray-500">Budget estimé</p>
+                            </div>
+                            {% else %}
+                            <span class="text-xs text-gray-400 italic">Non spécifié</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                {% if request.status == 'EN_ATTENTE' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+                                {% elif request.status == 'EN_COURS' %}bg-blue-100 text-blue-800 border border-blue-300
+                                {% elif request.status == 'DEVIS_ENVOYE' %}bg-purple-100 text-purple-800 border border-purple-300
+                                {% elif request.status == 'VALIDE' %}bg-green-100 text-green-800 border border-green-300
+                                {% elif request.status == 'ANNULE' %}bg-red-100 text-red-800 border border-red-300
+                                {% else %}bg-gray-100 text-gray-800 border border-gray-300{% endif %}">
+                                {% if request.status == 'EN_ATTENTE' %}<i class="fas fa-clock mr-1"></i>
+                                {% elif request.status == 'EN_COURS' %}<i class="fas fa-spinner mr-1"></i>
+                                {% elif request.status == 'DEVIS_ENVOYE' %}<i class="fas fa-file-invoice mr-1"></i>
+                                {% elif request.status == 'VALIDE' %}<i class="fas fa-check-circle mr-1"></i>
+                                {% elif request.status == 'ANNULE' %}<i class="fas fa-times-circle mr-1"></i>
+                                {% endif %}
+                                {{ request.get_status_display }}
+                            </span>
+                        </td>
+
+                        <!-- Date -->
+                        <td class="px-6 py-4">
+                            <div>
+                                <p class="text-sm text-gray-700">{{ request.created_at|date:"d/m/Y" }}</p>
+                                <p class="text-xs text-gray-500">{{ request.created_at|date:"H:i" }}</p>
+                            </div>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4">
+                            <a href="{% url 'admin_module:sourcing_detail_admin' request.id %}" 
+                               class="inline-flex items-center gap-2 bg-danger hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow-sm hover:shadow-md">
+                                <i class="fas fa-cog"></i>
+                                <span>Gérer</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if sourcing_requests.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-light/30">
+            <p class="text-sm text-gray-600">
+                Affichage de <span class="font-medium">{{ sourcing_requests.start_index }}</span> à 
+                <span class="font-medium">{{ sourcing_requests.end_index }}</span> sur 
+                <span class="font-medium">{{ sourcing_requests.paginator.count }}</span> demande{{ sourcing_requests.paginator.count|pluralize }}
+            </p>
+            <div class="flex gap-2">
+                {% if sourcing_requests.has_previous %}
+                <a href="?page=1{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ sourcing_requests.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-angle-left mr-1"></i>Précédent
+                </a>
+                {% endif %}
                 
-                <!-- Image -->
-                <div class="flex-shrink-0">
-                    {% if request.image %}
-                    <img src="{{ request.image.url }}" alt="{{ request.product_name }}" class="w-32 h-32 object-cover rounded-xl">
-                    {% else %}
-                    <div class="w-32 h-32 bg-light rounded-xl flex items-center justify-center">
-                        <i class="fas fa-image text-4xl text-gray-300"></i>
-                    </div>
-                    {% endif %}
+                <span class="px-4 py-2 bg-danger text-white rounded-lg text-sm font-medium">
+                    Page {{ sourcing_requests.number }} / {{ sourcing_requests.paginator.num_pages }}
+                </span>
+                
+                {% if sourcing_requests.has_next %}
+                <a href="?page={{ sourcing_requests.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Suivant<i class="fas fa-angle-right ml-1"></i>
+                </a>
+                <a href="?page={{ sourcing_requests.paginator.num_pages }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="py-16 px-6 text-center">
+            <div class="max-w-md mx-auto">
+                <div class="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search-dollar text-5xl text-purple-600"></i>
                 </div>
-
-                <!-- Info -->
-                <div class="flex-1">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <h3 class="text-lg font-bold text-primary mb-1">{{ request.request_code }}</h3>
-                            <p class="text-gray-800 font-medium">{{ request.product_name }}</p>
-                            <p class="text-sm text-gray-600 mt-1">Client: {{ request.user.full_name }}</p>
-                        </div>
-                        <span class="px-4 py-2 rounded-full text-sm font-medium {% if request.status == 'VALIDE' %}bg-green-50 text-action{% elif request.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600{% elif request.status == 'DEVIS_ENVOYE' %}bg-blue-50 text-primary{% else %}bg-purple-50 text-purple-600{% endif %}">
-                            {{ request.get_status_display }}
-                        </span>
-                    </div>
-                    
-                    <div class="flex flex-wrap gap-4 text-sm mb-4">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-boxes text-danger"></i>
-                            <span class="text-gray-700">Qté: <strong>{{ request.quantity }}</strong></span>
-                        </div>
-                        {% if request.budget %}
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-dollar-sign text-danger"></i>
-                            <span class="text-gray-700">Budget: <strong>${{ request.budget|floatformat:0 }}</strong></span>
-                        </div>
-                        {% endif %}
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-calendar text-danger"></i>
-                            <span class="text-gray-700">{{ request.created_at|date:"d M Y" }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <a href="{% url 'admin_module:sourcing_detail_admin' request.id %}" class="bg-danger hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition text-sm">
-                            Gérer
-                        </a>
-                        {% if request.status == 'EN_ATTENTE' or request.status == 'EN_COURS' %}
-                        <a href="{% url 'admin_module:create_quote' request.id %}" class="bg-action hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition text-sm">
-                            Créer un devis
-                        </a>
-                        {% endif %}
-                    </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Aucune demande de sourcing</h3>
+                <p class="text-gray-600 mb-6">
+                    {% if search_query or selected_status %}
+                    Aucune demande ne correspond à vos critères de recherche.
+                    {% else %}
+                    Il n'y a actuellement aucune demande de sourcing enregistrée.
+                    {% endif %}
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    {% if search_query or selected_status %}
+                    <a href="{% url 'admin_module:sourcing_management' %}" 
+                       class="inline-flex items-center gap-2 bg-danger hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition">
+                        <i class="fas fa-times"></i>
+                        <span>Réinitialiser les filtres</span>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'admin_module:dashboard' %}" 
+                       class="inline-flex items-center gap-2 bg-light hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-medium transition">
+                        <i class="fas fa-home"></i>
+                        <span>Tableau de bord</span>
+                    </a>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <div class="bg-white rounded-2xl p-12 shadow-card text-center">
-            <p class="text-gray-500">Aucune demande de sourcing</p>
-        </div>
-        {% endfor %}
+        {% endif %}
     </div>
 
-    <!-- Pagination -->
-    {% if sourcing_requests.has_other_pages %}
-    <div class="flex justify-center gap-2 mt-8">
-        {% if sourcing_requests.has_previous %}
-        <a href="?page={{ sourcing_requests.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
-            <i class="fas fa-chevron-left"></i>
-        </a>
-        {% endif %}
-        
-        <span class="px-4 py-2 bg-danger text-white rounded-lg font-medium">
-            Page {{ sourcing_requests.number }} / {{ sourcing_requests.paginator.num_pages }}
-        </span>
-        
-        {% if sourcing_requests.has_next %}
-        <a href="?page={{ sourcing_requests.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-light transition">
-            <i class="fas fa-chevron-right"></i>
-        </a>
-        {% endif %}
+    <!-- Info Section -->
+    <div class="mt-6 bg-purple-50 border-l-4 border-purple-500 p-6 rounded-r-xl">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info text-white"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-purple-900 mb-2">À propos du Sourcing</h4>
+                <p class="text-sm text-purple-800 mb-3">
+                    Le sourcing permet aux clients de demander des produits qui ne sont pas encore dans notre catalogue. 
+                    Votre rôle est de trouver ces produits en Chine, obtenir les meilleurs prix et créer des devis personnalisés.
+                </p>
+                <ul class="text-sm text-purple-800 space-y-1">
+                    <li><i class="fas fa-check-circle text-purple-600 mr-2"></i>Analysez les besoins du client</li>
+                    <li><i class="fas fa-check-circle text-purple-600 mr-2"></i>Recherchez les fournisseurs en Chine</li>
+                    <li><i class="fas fa-check-circle text-purple-600 mr-2"></i>Négociez les meilleurs prix</li>
+                    <li><i class="fas fa-check-circle text-purple-600 mr-2"></i>Créez un devis détaillé avec délais</li>
+                    <li><i class="fas fa-check-circle text-purple-600 mr-2"></i>Suivez la validation et la commande</li>
+                </ul>
+            </div>
+        </div>
     </div>
-    {% endif %}
 
 </div>
 {% endblock %}

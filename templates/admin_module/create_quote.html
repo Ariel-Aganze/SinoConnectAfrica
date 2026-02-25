@@ -1,0 +1,388 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Créer un Devis{% endblock %}
+{% block page_title %}Créer un Devis{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{% url 'admin_module:sourcing_detail_admin' sourcing_request.id %}" class="inline-flex items-center gap-2 text-primary hover:text-danger transition font-medium">
+            <i class="fas fa-arrow-left"></i>
+            <span>Retour à la demande de sourcing</span>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Main Form - Left Side (2 columns) -->
+        <div class="lg:col-span-2">
+            
+            <!-- Form Card -->
+            <div class="bg-white rounded-2xl p-8 shadow-card border-t-4 border-action">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-primary mb-2">Créer un Nouveau Devis</h2>
+                    <p class="text-gray-600">
+                        Remplissez les informations du devis pour la demande 
+                        <span class="font-mono font-bold text-purple-600">{{ sourcing_request.request_code }}</span>
+                    </p>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+
+                    <!-- Pricing Section -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+                        <h3 class="text-lg font-bold text-green-800 mb-4 flex items-center gap-2">
+                            <i class="fas fa-dollar-sign"></i>
+                            Tarification
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Quote Amount USD -->
+                            <div>
+                                <label for="id_quote_amount_usd" class="block text-sm font-bold text-gray-700 mb-2">
+                                    Montant en USD <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.quote_amount_usd }}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Prix de base en dollars américains
+                                </p>
+                            </div>
+
+                            <!-- Currency Code -->
+                            <div>
+                                <label for="id_currency_code" class="block text-sm font-bold text-gray-700 mb-2">
+                                    Code Devise Locale <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.currency_code }}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Ex: XAF, CDF, USD
+                                </p>
+                            </div>
+
+                            <!-- Quote Amount Local -->
+                            <div class="md:col-span-2">
+                                <label for="id_quote_amount_local" class="block text-sm font-bold text-gray-700 mb-2">
+                                    Montant en Devise Locale <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.quote_amount_local }}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Montant converti dans la devise du client
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description Section -->
+                    <div>
+                        <label for="id_description" class="block text-sm font-bold text-gray-700 mb-2">
+                            Description du Devis <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.description }}
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            Détaillez ce qui est inclus : produit, quantité, caractéristiques, garanties, services, frais de port, etc.
+                        </p>
+                    </div>
+
+                    <!-- Delivery and Validity Section -->
+                    <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                        <h3 class="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt"></i>
+                            Délais et Validité
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Delivery Time -->
+                            <div>
+                                <label for="id_delivery_time_days" class="block text-sm font-bold text-gray-700 mb-2">
+                                    Délai de Livraison (jours) <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.delivery_time_days }}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-shipping-fast mr-1"></i>
+                                    Nombre de jours pour la livraison
+                                </p>
+                            </div>
+
+                            <!-- Valid Until -->
+                            <div>
+                                <label for="id_valid_until" class="block text-sm font-bold text-gray-700 mb-2">
+                                    Valide Jusqu'au <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.valid_until }}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Date limite de validité du devis
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Upload -->
+                    <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+                        <h3 class="text-lg font-bold text-purple-800 mb-4 flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            Document du Devis (Optionnel)
+                        </h3>
+
+                        <div>
+                            <label for="id_quote_document" class="block text-sm font-bold text-gray-700 mb-2">
+                                Joindre un Document PDF
+                            </label>
+                            {{ form.quote_document }}
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Formats acceptés: PDF. Taille maximale: 10MB. Le document peut contenir des détails supplémentaires, images, tableaux de prix, etc.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl mt-0.5"></i>
+                            <div>
+                                <p class="font-bold text-red-800 mb-2">Erreurs dans le formulaire</p>
+                                <ul class="text-sm text-red-700 space-y-1">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                        <li>{{ field }}: {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t-2 border-gray-200">
+                        <button type="submit" 
+                                class="flex-1 bg-gradient-to-r from-action to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-xl font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                            <i class="fas fa-paper-plane text-xl"></i>
+                            <span class="text-lg">Envoyer le Devis au Client</span>
+                        </button>
+                        <a href="{% url 'admin_module:sourcing_detail_admin' sourcing_request.id %}" 
+                           class="flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 px-8 py-4 rounded-xl font-medium transition flex items-center justify-center gap-2">
+                            <i class="fas fa-times"></i>
+                            <span>Annuler</span>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar - Right Side (1 column) -->
+        <div class="space-y-6">
+            
+            <!-- Sourcing Request Summary -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border-t-4 border-purple-500">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-purple-500"></i>
+                    Demande de Sourcing
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Request Code -->
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Code Demande</p>
+                        <p class="font-mono font-bold text-purple-600 text-lg">{{ sourcing_request.request_code }}</p>
+                    </div>
+
+                    <!-- Client -->
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Client</p>
+                        <div class="flex items-center gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ sourcing_request.user.full_name|urlencode }}&background=9333EA&color=fff&size=32" 
+                                 alt="{{ sourcing_request.user.full_name }}" 
+                                 class="w-8 h-8 rounded-full">
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm">{{ sourcing_request.user.full_name }}</p>
+                                <p class="text-xs text-gray-500">{{ sourcing_request.user.email|truncatechars:25 }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product -->
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Produit Recherché</p>
+                        <p class="font-bold text-gray-800">{{ sourcing_request.product_name }}</p>
+                        {% if sourcing_request.product_description %}
+                        <p class="text-xs text-gray-600 mt-1">{{ sourcing_request.product_description|truncatewords:15 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-light rounded-lg p-3">
+                            <p class="text-xs text-gray-500 mb-1">Quantité</p>
+                            <p class="font-bold text-gray-800">{{ sourcing_request.quantity }}</p>
+                        </div>
+                        {% if sourcing_request.budget %}
+                        <div class="bg-light rounded-lg p-3">
+                            <p class="text-xs text-gray-500 mb-1">Budget</p>
+                            <p class="font-bold text-gray-800">${{ sourcing_request.budget|floatformat:0 }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reference Image -->
+                    {% if sourcing_request.image %}
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-2">Image de Référence</p>
+                        <a href="{{ sourcing_request.image.url }}" target="_blank">
+                            <img src="{{ sourcing_request.image.url }}" 
+                                 alt="Image de référence" 
+                                 class="w-full rounded-lg border-2 border-gray-200 hover:border-purple-500 transition">
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <a href="{% url 'admin_module:sourcing_detail_admin' sourcing_request.id %}" 
+                       class="text-sm text-danger hover:text-red-700 font-medium flex items-center gap-2">
+                        <span>Voir tous les détails</span>
+                        <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pricing Calculator Helper -->
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-300">
+                <h4 class="font-bold text-yellow-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-calculator text-yellow-600"></i>
+                    Calculateur Rapide
+                </h4>
+                <div class="space-y-3">
+                    <div class="bg-white rounded-lg p-3">
+                        <p class="text-xs text-gray-600 mb-2">Taux de change courant</p>
+                        <p class="text-sm font-medium text-gray-800">1 USD = 600 XAF (exemple)</p>
+                        <p class="text-xs text-gray-500 mt-1">Vérifiez le taux actuel avant de soumettre</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3">
+                        <p class="text-xs text-gray-600 mb-2">Formule</p>
+                        <p class="text-xs font-mono text-gray-700">
+                            Montant Local = Montant USD × Taux
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                <h4 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-yellow-500"></i>
+                    Conseils pour un Bon Devis
+                </h4>
+                <ul class="text-sm text-blue-800 space-y-2">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Soyez précis sur ce qui est inclus</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Indiquez clairement les délais réalistes</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Ajoutez une marge pour les imprévus</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Joignez un document PDF pour plus de professionnalisme</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Vérifiez vos calculs avant de soumettre</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Warning -->
+            <div class="bg-red-50 rounded-2xl p-6 border-2 border-red-200">
+                <h4 class="font-bold text-red-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    Important
+                </h4>
+                <ul class="text-sm text-red-800 space-y-2">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-red-600 mt-0.5"></i>
+                        <span>Le client recevra une notification immédiatement</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-red-600 mt-0.5"></i>
+                        <span>Le devis ne peut pas être modifié après envoi</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-red-600 mt-0.5"></i>
+                        <span>Assurez-vous que tous les montants sont corrects</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+/* Custom styles for form fields */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+textarea,
+input[type="file"] {
+    width: 100%;
+    background-color: #F5F7FA;
+    border: 2px solid #E5E7EB;
+    color: #1F2937;
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+    border-color: #1FA774;
+    ring: 2px;
+    ring-color: rgba(31, 167, 116, 0.2);
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+input[type="file"] {
+    padding: 0.75rem;
+    background-color: white;
+    cursor: pointer;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    background: #1FA774;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+input[type="file"]::-webkit-file-upload-button:hover {
+    background: #15803d;
+}
+</style>
+{% endblock %}

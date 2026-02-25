@@ -1,0 +1,424 @@
+{% extends 'admin_module/base_admin.html' %}
+
+{% block title %}Analyses et Statistiques{% endblock %}
+{% block page_title %}Analyses et Statistiques{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styles for charts */
+    .chart-container {
+        position: relative;
+        height: 400px;
+    }
+    
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    
+    <!-- Header Section -->
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-primary mb-2">Analyses et Statistiques</h2>
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-chart-line mr-1"></i>
+                Vue d'ensemble des performances de la plateforme
+            </p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="window.print()" class="bg-light hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-medium transition shadow-sm">
+                <i class="fas fa-print mr-2"></i>Imprimer
+            </button>
+            <button onclick="alert('Export CSV à implémenter')" class="bg-action hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition shadow-sm">
+                <i class="fas fa-download mr-2"></i>Exporter
+            </button>
+        </div>
+    </div>
+
+    <!-- Period Filter -->
+    <div class="bg-white rounded-2xl p-6 shadow-card mb-6">
+        <form method="GET" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Période</label>
+                <select name="period" class="w-full bg-light border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-danger transition">
+                    <option value="30" {% if period == '30' %}selected{% endif %}>30 derniers jours</option>
+                    <option value="90" {% if period == '90' %}selected{% endif %}>90 derniers jours</option>
+                    <option value="180" {% if period == '180' %}selected{% endif %}>6 derniers mois</option>
+                    <option value="365" {% if period == '365' %}selected{% endif %}>12 derniers mois</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-danger hover:bg-red-700 text-white px-8 py-3 rounded-xl font-medium transition shadow-sm">
+                <i class="fas fa-sync-alt mr-2"></i>Actualiser
+            </button>
+        </form>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Revenue -->
+        <div class="stat-card bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-3xl"></i>
+                </div>
+                <span class="text-xs bg-white/20 px-3 py-1 rounded-full">Revenu</span>
+            </div>
+            <p class="text-4xl font-bold mb-2">${{ total_revenue|floatformat:0 }}</p>
+            <p class="text-sm text-green-100">
+                {% if revenue_growth >= 0 %}
+                <i class="fas fa-arrow-up mr-1"></i>+{{ revenue_growth|floatformat:1 }}%
+                {% else %}
+                <i class="fas fa-arrow-down mr-1"></i>{{ revenue_growth|floatformat:1 }}%
+                {% endif %}
+                vs période précédente
+            </p>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-3xl"></i>
+                </div>
+                <span class="text-xs bg-white/20 px-3 py-1 rounded-full">Commandes</span>
+            </div>
+            <p class="text-4xl font-bold mb-2">{{ total_orders }}</p>
+            <p class="text-sm text-blue-100">
+                {% if orders_growth >= 0 %}
+                <i class="fas fa-arrow-up mr-1"></i>+{{ orders_growth|floatformat:1 }}%
+                {% else %}
+                <i class="fas fa-arrow-down mr-1"></i>{{ orders_growth|floatformat:1 }}%
+                {% endif %}
+                vs période précédente
+            </p>
+        </div>
+
+        <!-- New Customers -->
+        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-3xl"></i>
+                </div>
+                <span class="text-xs bg-white/20 px-3 py-1 rounded-full">Nouveaux</span>
+            </div>
+            <p class="text-4xl font-bold mb-2">{{ new_customers }}</p>
+            <p class="text-sm text-purple-100">
+                {% if customers_growth >= 0 %}
+                <i class="fas fa-arrow-up mr-1"></i>+{{ customers_growth|floatformat:1 }}%
+                {% else %}
+                <i class="fas fa-arrow-down mr-1"></i>{{ customers_growth|floatformat:1 }}%
+                {% endif %}
+                nouveaux clients
+            </p>
+        </div>
+
+        <!-- Average Order Value -->
+        <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-700 rounded-2xl p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-chart-line text-3xl"></i>
+                </div>
+                <span class="text-xs bg-white/20 px-3 py-1 rounded-full">Panier Moyen</span>
+            </div>
+            <p class="text-4xl font-bold mb-2">${{ avg_order_value|floatformat:0 }}</p>
+            <p class="text-sm text-orange-100">
+                {% if aov_growth >= 0 %}
+                <i class="fas fa-arrow-up mr-1"></i>+{{ aov_growth|floatformat:1 }}%
+                {% else %}
+                <i class="fas fa-arrow-down mr-1"></i>{{ aov_growth|floatformat:1 }}%
+                {% endif %}
+                par commande
+            </p>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
+        <!-- Revenue Chart -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary">Évolution du Revenu</h3>
+                <span class="text-sm text-gray-500">{{ period }} derniers jours</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Orders Chart -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary">Commandes par Statut</h3>
+                <span class="text-sm text-gray-500">Répartition</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="ordersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products and Customers -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
+        <!-- Top Products -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+                <i class="fas fa-trophy text-yellow-500"></i>
+                Top 10 Produits
+            </h3>
+            <div class="space-y-3">
+                {% for product in top_products %}
+                <div class="flex items-center gap-4 p-3 bg-light rounded-xl hover:bg-gray-200 transition">
+                    <span class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {{ forloop.counter }}
+                    </span>
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-12 h-12 object-cover rounded-lg">
+                    {% else %}
+                    <div class="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-image text-gray-500"></i>
+                    </div>
+                    {% endif %}
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-gray-800 truncate">{{ product.name }}</p>
+                        <p class="text-xs text-gray-500">{{ product.total_sold }} ventes</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-green-600">${{ product.revenue|floatformat:0 }}</p>
+                        <p class="text-xs text-gray-500">Revenu</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-8">Aucune donnée disponible</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Customers -->
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+                <i class="fas fa-star text-yellow-500"></i>
+                Top 10 Clients
+            </h3>
+            <div class="space-y-3">
+                {% for customer in top_customers %}
+                <div class="flex items-center gap-4 p-3 bg-light rounded-xl hover:bg-gray-200 transition">
+                    <span class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {{ forloop.counter }}
+                    </span>
+                    <img src="https://ui-avatars.com/api/?name={{ customer.full_name|urlencode }}&background=0F2D52&color=fff&size=48" 
+                         alt="{{ customer.full_name }}" 
+                         class="w-12 h-12 rounded-full border-2 border-blue-200">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-gray-800 truncate">{{ customer.full_name }}</p>
+                        <p class="text-xs text-gray-500">{{ customer.total_orders }} commandes</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-green-600">${{ customer.total_spent|floatformat:0 }}</p>
+                        <p class="text-xs text-gray-500">Dépensé</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-8">Aucune donnée disponible</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Performance -->
+    <div class="bg-white rounded-2xl p-6 shadow-card mb-6">
+        <h3 class="text-xl font-bold text-primary mb-6">Performance par Catégorie</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-light border-b-2 border-gray-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-bold text-gray-700">Catégorie</th>
+                        <th class="px-4 py-3 text-right text-sm font-bold text-gray-700">Produits</th>
+                        <th class="px-4 py-3 text-right text-sm font-bold text-gray-700">Ventes</th>
+                        <th class="px-4 py-3 text-right text-sm font-bold text-gray-700">Revenu</th>
+                        <th class="px-4 py-3 text-right text-sm font-bold text-gray-700">Moyenne</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for category in category_performance %}
+                    <tr class="hover:bg-light/50 transition">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">{{ category.icon|default:"📦" }}</span>
+                                <span class="font-medium text-gray-800">{{ category.name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right text-gray-700">{{ category.product_count }}</td>
+                        <td class="px-4 py-3 text-right text-gray-700">{{ category.total_sales }}</td>
+                        <td class="px-4 py-3 text-right font-bold text-green-600">${{ category.revenue|floatformat:0 }}</td>
+                        <td class="px-4 py-3 text-right text-gray-700">${{ category.avg_price|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">Aucune donnée disponible</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Additional Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        
+        <!-- Conversion Rate -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border-l-4 border-green-500">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-percentage text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Taux de Conversion</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ conversion_rate|floatformat:1 }}%</p>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-green-500 h-2 rounded-full" style="width: {{ conversion_rate }}%"></div>
+            </div>
+        </div>
+
+        <!-- Payment Success Rate -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border-l-4 border-blue-500">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-credit-card text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Taux Paiement Réussi</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ payment_success_rate|floatformat:1 }}%</p>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" style="width: {{ payment_success_rate }}%"></div>
+            </div>
+        </div>
+
+        <!-- Customer Retention -->
+        <div class="bg-white rounded-2xl p-6 shadow-card border-l-4 border-purple-500">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-sync text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Clients Récurrents</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ retention_rate|floatformat:1 }}%</p>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-purple-500 h-2 rounded-full" style="width: {{ retention_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Note -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-info text-white"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-blue-900 mb-2">À propos des Statistiques</h4>
+                <p class="text-sm text-blue-800 mb-2">
+                    Ces analyses sont calculées en temps réel à partir des données de la plateforme. 
+                    Utilisez les filtres de période pour analyser différentes plages temporelles.
+                </p>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li><i class="fas fa-check-circle text-blue-600 mr-2"></i>Les pourcentages de croissance comparent avec la période précédente équivalente</li>
+                    <li><i class="fas fa-check-circle text-blue-600 mr-2"></i>Le panier moyen est calculé sur les commandes validées uniquement</li>
+                    <li><i class="fas fa-check-circle text-blue-600 mr-2"></i>Les graphiques sont interactifs - survolez pour plus de détails</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart');
+if (revenueCtx) {
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: {{ revenue_labels|safe }},
+            datasets: [{
+                label: 'Revenu (USD)',
+                data: {{ revenue_data|safe }},
+                borderColor: '#1FA774',
+                backgroundColor: 'rgba(31, 167, 116, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Orders Status Chart
+const ordersCtx = document.getElementById('ordersChart');
+if (ordersCtx) {
+    new Chart(ordersCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ order_status_labels|safe }},
+            datasets: [{
+                data: {{ order_status_data|safe }},
+                backgroundColor: [
+                    '#1FA774', // Vert - Livré
+                    '#3B82F6', // Bleu - En cours
+                    '#F59E0B', // Orange - En attente
+                    '#EF4444', // Rouge - Annulé
+                    '#8B5CF6', // Violet - Autres
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

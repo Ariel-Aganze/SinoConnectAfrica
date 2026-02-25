@@ -58,6 +58,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.site_settings',
                 'core.context_processors.notifications_processor',
+                'core.context_processors.currency_processor',
             ],
         },
     },

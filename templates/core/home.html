@@ -24,7 +24,7 @@
                         Voir les produits
                     </a>
                     {% if user.is_authenticated and user.is_client %}
-                    <a href="{% url 'client_module:sourcing_request' %}" class="bg-white border-2 border-action text-action hover:bg-action hover:text-white font-medium py-3.5 px-8 rounded-full transition">
+                    <a href="{% url 'client_module:sourcing_request_create' %}" class="bg-white border-2 border-action text-action hover:bg-action hover:text-white font-medium py-3.5 px-8 rounded-full transition">
                         Demande de sourcing
                     </a>
                     {% else %}

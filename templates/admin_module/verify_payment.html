@@ -1,87 +1,321 @@
 {% extends 'admin_module/base_admin.html' %}
 
 {% block title %}Vérifier Paiement{% endblock %}
-{% block page_title %}Vérifier Paiement{% endblock %}
+{% block page_title %}Vérification de Paiement{% endblock %}
 
 {% block content %}
 <div class="py-6">
     
-    <a href="{% url 'admin_module:payment_verification' %}" class="inline-flex items-center gap-2 text-primary hover:text-danger mb-6 transition">
-        <i class="fas fa-arrow-left"></i> Retour aux paiements
-    </a>
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{% url 'admin_module:payment_verification' %}" class="inline-flex items-center gap-2 text-primary hover:text-danger transition font-medium">
+            <i class="fas fa-arrow-left"></i>
+            <span>Retour à la liste des paiements</span>
+        </a>
+    </div>
 
-    <div class="max-w-4xl mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Main Content - Left Side (2 columns) -->
+        <div class="lg:col-span-2 space-y-6">
             
-            <!-- Payment Proof -->
+            <!-- Payment Details Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border-t-4 border-yellow-500">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-primary mb-2">Détails du Paiement</h2>
+                        <p class="text-sm text-gray-500">
+                            <i class="far fa-calendar mr-1"></i>
+                            Soumis le {{ payment.created_at|date:"d/m/Y à H:i" }}
+                        </p>
+                    </div>
+                    <span class="px-4 py-2 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 border-2 border-yellow-300 animate-pulse">
+                        <i class="fas fa-clock mr-1"></i>
+                        {{ payment.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Payment Info Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    
+                    <!-- Amount Info -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200">
+                        <p class="text-sm text-green-700 font-bold uppercase mb-2">Montant du Paiement</p>
+                        <p class="text-4xl font-bold text-green-800 mb-1">{{ payment.amount|floatformat:0 }}</p>
+                        <p class="text-lg text-green-600 font-medium">{{ payment.order.currency_code }}</p>
+                        <div class="mt-3 pt-3 border-t border-green-200">
+                            <p class="text-xs text-green-700">Équivalent USD:</p>
+                            <p class="text-lg font-bold text-green-800">${{ payment.order.total_amount_usd|floatformat:2 }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="bg-light rounded-xl p-5 border border-gray-200">
+                        <p class="text-sm text-gray-600 font-bold uppercase mb-3">Méthode de Paiement</p>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                {% if payment.method == 'MOBILE_MONEY' %}
+                                    <i class="fas fa-mobile-alt text-blue-600 text-xl"></i>
+                                {% elif payment.method == 'BANK_TRANSFER' %}
+                                    <i class="fas fa-university text-blue-600 text-xl"></i>
+                                {% elif payment.method == 'CASH' %}
+                                    <i class="fas fa-money-bill text-blue-600 text-xl"></i>
+                                {% else %}
+                                    <i class="fas fa-credit-card text-blue-600 text-xl"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800 text-lg">{{ payment.get_method_display }}</p>
+                                <p class="text-sm text-gray-500">Mode de paiement</p>
+                            </div>
+                        </div>
+
+                        {% if payment.transaction_reference %}
+                        <div class="bg-white rounded-lg p-3 border border-gray-200">
+                            <p class="text-xs text-gray-500 mb-1">Référence Transaction</p>
+                            <p class="font-mono text-sm font-bold text-gray-800">{{ payment.transaction_reference }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Client Notes -->
+                {% if payment.notes %}
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl mb-6">
+                    <p class="text-sm text-blue-700 font-bold uppercase mb-2 flex items-center gap-2">
+                        <i class="fas fa-comment-dots"></i>
+                        Notes du Client
+                    </p>
+                    <p class="text-sm text-blue-900">{{ payment.notes }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Associated Order -->
+                <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <p class="text-sm text-gray-600 font-bold uppercase mb-3 flex items-center gap-2">
+                        <i class="fas fa-shopping-cart"></i>
+                        Commande Associée
+                    </p>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <p class="font-mono text-lg font-bold text-primary mb-1">{{ payment.order.order_code }}</p>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-box mr-1"></i>
+                                {{ payment.order.items.count }} article{{ payment.order.items.count|pluralize }}
+                            </p>
+                            <p class="text-sm text-gray-600">
+                                <i class="far fa-calendar mr-1"></i>
+                                Créée le {{ payment.order.created_at|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                        <a href="{% url 'admin_module:order_detail_admin' payment.order.id %}" 
+                           class="inline-flex items-center gap-2 bg-primary hover:bg-blue-900 text-white px-5 py-2.5 rounded-xl font-medium transition shadow-sm">
+                            <span>Voir la commande</span>
+                            <i class="fas fa-external-link-alt text-sm"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proof of Payment -->
             <div class="bg-white rounded-2xl p-6 shadow-card">
-                <h3 class="text-lg font-bold text-primary mb-6">Preuve de paiement</h3>
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-receipt text-action"></i>
+                    Preuve de Paiement
+                </h3>
+
                 {% if payment.proof_image %}
-                <img src="{{ payment.proof_image.url }}" alt="Preuve" class="w-full rounded-xl border-2 border-gray-200 mb-4">
-                <a href="{{ payment.proof_image.url }}" target="_blank" class="text-danger hover:underline text-sm">
-                    <i class="fas fa-external-link-alt mr-1"></i> Ouvrir en taille réelle
-                </a>
+                <div class="mb-4">
+                    <div class="bg-gray-50 rounded-xl p-4 border-2 border-dashed border-gray-300">
+                        <a href="{{ payment.proof_image.url }}" target="_blank" class="block group">
+                            <img src="{{ payment.proof_image.url }}" 
+                                 alt="Preuve de paiement" 
+                                 class="w-full max-w-2xl mx-auto rounded-lg shadow-lg border-4 border-white group-hover:border-danger transition-all duration-300 group-hover:shadow-2xl">
+                        </a>
+                        <p class="text-center text-sm text-gray-500 mt-3">
+                            <i class="fas fa-search-plus mr-1"></i>
+                            Cliquez sur l'image pour l'agrandir dans un nouvel onglet
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Image Actions -->
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ payment.proof_image.url }}" 
+                       download 
+                       class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-download"></i>
+                        <span>Télécharger l'image</span>
+                    </a>
+                    <a href="{{ payment.proof_image.url }}" 
+                       target="_blank" 
+                       class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>Ouvrir dans un nouvel onglet</span>
+                    </a>
+                </div>
                 {% else %}
-                <div class="w-full h-64 bg-light rounded-xl flex items-center justify-center">
-                    <p class="text-gray-400">Aucune preuve fournie</p>
+                <div class="bg-red-50 border-2 border-red-200 rounded-xl p-8 text-center">
+                    <i class="fas fa-exclamation-triangle text-5xl text-red-400 mb-4"></i>
+                    <p class="text-red-800 font-bold mb-2">Aucune preuve de paiement fournie</p>
+                    <p class="text-sm text-red-600">Le client n'a pas téléchargé de preuve de paiement.</p>
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Payment Details & Actions -->
-            <div class="bg-white rounded-2xl p-6 shadow-card">
-                <h3 class="text-lg font-bold text-primary mb-6">Détails du paiement</h3>
-                
-                <div class="space-y-4 mb-6">
+            <!-- Verification History (if exists) -->
+            {% if payment.verified_by %}
+            <div class="bg-purple-50 border-l-4 border-purple-500 p-5 rounded-r-xl">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-history text-purple-600 text-2xl mt-1"></i>
                     <div>
-                        <p class="text-sm text-gray-500 mb-1">Commande</p>
-                        <p class="font-bold text-gray-800">{{ payment.order.order_code }}</p>
+                        <p class="font-bold text-purple-900 mb-2">Historique de Vérification</p>
+                        <p class="text-sm text-purple-800">
+                            Vérifié par <strong>{{ payment.verified_by.full_name }}</strong> 
+                            le {{ payment.verified_at|date:"d/m/Y à H:i" }}
+                        </p>
+                        {% if payment.admin_notes %}
+                        <div class="mt-3 bg-white rounded-lg p-3">
+                            <p class="text-xs text-purple-600 font-bold mb-1">Notes de vérification</p>
+                            <p class="text-sm text-gray-800">{{ payment.admin_notes }}</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Client</p>
-                        <p class="font-bold text-gray-800">{{ payment.user.full_name }}</p>
-                        <p class="text-sm text-gray-600">{{ payment.user.email }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Montant</p>
-                        <p class="font-bold text-danger text-2xl">${{ payment.amount|floatformat:0 }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Méthode</p>
-                        <p class="font-bold text-gray-800">{{ payment.get_method_display }}</p>
-                    </div>
-                    {% if payment.transaction_reference %}
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Référence transaction</p>
-                        <p class="font-medium text-gray-800">{{ payment.transaction_reference }}</p>
-                    </div>
-                    {% endif %}
-                    {% if payment.notes %}
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Notes du client</p>
-                        <p class="text-sm text-gray-700 bg-light p-3 rounded-lg">{{ payment.notes }}</p>
-                    </div>
-                    {% endif %}
                 </div>
+            </div>
+            {% endif %}
+        </div>
 
-                <!-- Actions -->
-                <div class="space-y-3 pt-6 border-t border-gray-200">
-                    <form method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="w-full bg-action hover:bg-green-700 text-white font-bold py-4 rounded-xl transition" onclick="return confirm('Confirmer ce paiement?')">
-                            <i class="fas fa-check-circle mr-2"></i> Approuver le paiement
-                        </button>
-                    </form>
+        <!-- Sidebar - Right Side (1 column) -->
+        <div class="space-y-6">
+            
+            <!-- Client Information -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-user-circle text-action"></i>
+                    Informations Client
+                </h3>
+                <div class="flex items-start gap-4 mb-4">
+                    <img src="https://ui-avatars.com/api/?name={{ payment.user.full_name|urlencode }}&background=0F2D52&color=fff&size=80" 
+                         alt="{{ payment.user.full_name }}" 
+                         class="w-16 h-16 rounded-full border-2 border-primary shadow-md">
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800 text-lg mb-1">{{ payment.user.full_name }}</p>
+                        <p class="text-sm text-gray-600 mb-1">
+                            <i class="far fa-envelope mr-1"></i>{{ payment.user.email }}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-phone mr-1"></i>{{ payment.user.phone_number|default:"Non fourni" }}
+                        </p>
+                    </div>
+                </div>
+                <a href="{% url 'admin_module:user_detail_admin' payment.user.id %}" 
+                   class="inline-flex items-center gap-2 text-danger hover:text-red-700 font-medium text-sm">
+                    <span>Voir profil complet</span>
+                    <i class="fas fa-arrow-right text-xs"></i>
+                </a>
+            </div>
 
-                    <form method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="reject">
-                        <input type="text" name="reason" placeholder="Raison du rejet..." class="w-full bg-light border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-danger transition mb-2">
-                        <button type="submit" class="w-full bg-danger hover:bg-red-700 text-white font-bold py-3 rounded-xl transition" onclick="return confirm('Rejeter ce paiement?')">
-                            <i class="fas fa-times-circle mr-2"></i> Rejeter le paiement
+            <!-- Verification Actions -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border-t-4 border-green-500">
+                <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-tasks text-green-500"></i>
+                    Actions de Vérification
+                </h3>
+
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Approve Button -->
+                    <button type="submit" 
+                            name="action" 
+                            value="approve"
+                            onclick="return confirm('Êtes-vous sûr de vouloir APPROUVER ce paiement ?')"
+                            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 rounded-xl font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                        <i class="fas fa-check-circle text-xl"></i>
+                        <span class="text-lg">APPROUVER LE PAIEMENT</span>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">ou</span>
+                        </div>
+                    </div>
+
+                    <!-- Reject Section -->
+                    <div class="bg-red-50 rounded-xl p-4 border-2 border-red-200">
+                        <p class="text-sm font-bold text-red-800 mb-3">Rejeter le paiement</p>
+                        <textarea name="reason" 
+                                  rows="3" 
+                                  placeholder="Raison du rejet (obligatoire)..."
+                                  class="w-full bg-white border-2 border-red-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 transition mb-3"
+                                  required></textarea>
+                        
+                        <button type="submit" 
+                                name="action" 
+                                value="reject"
+                                onclick="return confirm('Êtes-vous sûr de vouloir REJETER ce paiement ?')"
+                                class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <i class="fas fa-times-circle"></i>
+                            <span>REJETER LE PAIEMENT</span>
                         </button>
-                    </form>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Verification Guidelines -->
+            <div class="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                <h4 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-yellow-500"></i>
+                    Conseils de Vérification
+                </h4>
+                <ul class="text-sm text-blue-800 space-y-2">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Vérifiez que le montant correspond exactement</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Confirmez la date de la transaction</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Vérifiez la référence de transaction si disponible</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                        <span>Assurez-vous que la preuve est claire et lisible</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-exclamation-triangle text-red-600 mt-0.5"></i>
+                        <span class="font-semibold">En cas de doute, contactez le client avant d'approuver</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <h3 class="text-lg font-bold text-primary mb-4">Liens Rapides</h3>
+                <div class="space-y-2">
+                    <a href="{% url 'admin_module:payment_verification' %}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-list text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Liste des paiements</span>
+                    </a>
+                    <a href="{% url 'admin_module:order_detail_admin' payment.order.id %}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-shopping-cart text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Voir la commande</span>
+                    </a>
+                    <a href="mailto:{{ payment.user.email }}" 
+                       class="flex items-center gap-3 px-4 py-3 bg-light rounded-xl hover:bg-gray-200 transition group">
+                        <i class="fas fa-envelope text-primary group-hover:text-danger transition"></i>
+                        <span class="text-sm font-medium text-gray-800">Contacter le client</span>
+                    </a>
                 </div>
             </div>
         </div>

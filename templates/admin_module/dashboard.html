@@ -1,84 +1,98 @@
 {% extends 'admin_module/base_admin.html' %}
 
-{% block title %}Dashboard Administrateur{% endblock %}
-{% block page_title %}Dashboard Administrateur{% endblock %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block page_title %}Dashboard Admin{% endblock %}
 
 {% block content %}
 <div class="py-6">
     
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-primary mb-2">Vue d'ensemble de la plateforme</h2>
-        <p class="text-gray-600">Statistiques et activité récente</p>
-    </div>
-
-    <!-- KPI Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         
         <!-- Total Revenue -->
-        <div class="bg-gradient-to-br from-action to-green-700 rounded-2xl p-6 text-white shadow-card">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl">
-                    <i class="fas fa-dollar-sign"></i>
+        <div class="bg-gradient-to-br from-danger to-red-600 rounded-2xl p-6 shadow-card text-white">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-red-100 mb-1">Revenu Total</p>
+                    <h3 class="text-3xl font-bold">${{ total_revenue|floatformat:0 }}</h3>
+                    <p class="text-xs text-red-100 mt-2">+${{ revenue_30d|floatformat:0 }} ce mois</p>
                 </div>
-                <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded">Total</span>
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-2xl"></i>
+                </div>
             </div>
-            <h3 class="text-3xl font-bold mb-1">${{ total_revenue|floatformat:0 }}</h3>
-            <p class="text-sm text-white/80">Revenus totaux (USD)</p>
-            <p class="text-xs text-white/60 mt-2">+${{ revenue_30d|floatformat:0 }} derniers 30j</p>
+            <div class="w-full bg-white/20 rounded-full h-2">
+                <div class="bg-white h-2 rounded-full" style="width: {% if total_revenue > 0 %}{% widthratio revenue_30d total_revenue 100 %}{% else %}0{% endif %}%"></div>
+            </div>
         </div>
 
         <!-- Total Orders -->
-        <div class="bg-white rounded-2xl p-6 shadow-card">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary text-xl">
-                    <i class="fas fa-box"></i>
+        <div class="bg-gradient-to-br from-primary to-blue-900 rounded-2xl p-6 shadow-card text-white">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-blue-100 mb-1">Commandes</p>
+                    <h3 class="text-3xl font-bold">{{ total_orders }}</h3>
+                    <p class="text-xs text-blue-100 mt-2">+{{ orders_30d }} ce mois</p>
                 </div>
-                <span class="text-xs font-medium text-gray-500">Commandes</span>
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-2xl"></i>
+                </div>
             </div>
-            <h3 class="text-3xl font-bold text-primary mb-1">{{ total_orders }}</h3>
-            <p class="text-sm text-gray-600">Commandes totales</p>
-            <p class="text-xs text-gray-500 mt-2">{{ orders_30d }} derniers 30j</p>
+            <div class="w-full bg-white/20 rounded-full h-2">
+                <div class="bg-white h-2 rounded-full" style="width: {% if total_orders > 0 %}{% widthratio orders_30d total_orders 100 %}{% else %}0{% endif %}%"></div>
+            </div>
         </div>
 
-        <!-- Users -->
-        <div class="bg-white rounded-2xl p-6 shadow-card">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl">
-                    <i class="fas fa-users"></i>
+        <!-- Total Users -->
+        <div class="bg-gradient-to-br from-action to-green-700 rounded-2xl p-6 shadow-card text-white">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-green-100 mb-1">Utilisateurs</p>
+                    <h3 class="text-3xl font-bold">{{ total_users }}</h3>
+                    <p class="text-xs text-green-100 mt-2">+{{ new_users_30d }} ce mois</p>
                 </div>
-                <span class="text-xs font-medium text-gray-500">Utilisateurs</span>
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-2xl"></i>
+                </div>
             </div>
-            <h3 class="text-3xl font-bold text-purple-600 mb-1">{{ total_users }}</h3>
-            <p class="text-sm text-gray-600">Clients inscrits</p>
-            <p class="text-xs text-gray-500 mt-2">+{{ new_users_30d }} derniers 30j</p>
+            <div class="w-full bg-white/20 rounded-full h-2">
+                <div class="bg-white h-2 rounded-full" style="width: {% if total_users > 0 %}{% widthratio new_users_30d total_users 100 %}{% else %}0{% endif %}%"></div>
+            </div>
         </div>
 
-        <!-- Pending Actions -->
-        <div class="bg-white rounded-2xl p-6 shadow-card border-l-4 {% if pending_payments > 0 or pending_sourcing > 0 %}border-danger{% else %}border-gray-200{% endif %}">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-danger text-xl">
-                    <i class="fas fa-exclamation-circle"></i>
+        <!-- Pending Payments -->
+        <div class="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-6 shadow-card text-white">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-yellow-100 mb-1">En Attente</p>
+                    <h3 class="text-3xl font-bold">{{ pending_payments }}</h3>
+                    <p class="text-xs text-yellow-100 mt-2">Paiements à vérifier</p>
                 </div>
-                <span class="text-xs font-medium text-danger">Actions</span>
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-clock text-2xl"></i>
+                </div>
             </div>
-            <h3 class="text-3xl font-bold text-danger mb-1">{{ pending_payments|add:pending_sourcing }}</h3>
-            <p class="text-sm text-gray-600">En attente</p>
-            <p class="text-xs text-gray-500 mt-2">{{ pending_payments }} paiements • {{ pending_sourcing }} sourcing</p>
+            {% if pending_payments > 0 %}
+            <a href="{% url 'admin_module:payment_verification' %}" class="text-xs text-white hover:text-yellow-100 underline">
+                Vérifier maintenant →
+            </a>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Secondary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        
         <div class="bg-white rounded-2xl p-6 shadow-card">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <p class="text-sm text-gray-500 mb-1">Commandes en cours</p>
+                    <p class="text-sm text-gray-500 mb-1">Commandes en attente</p>
                     <h3 class="text-2xl font-bold text-primary">{{ pending_orders }}</h3>
                 </div>
                 <i class="fas fa-clock text-2xl text-yellow-500"></i>
             </div>
             <div class="w-full bg-light rounded-full h-2">
-                <div class="bg-yellow-500 h-2 rounded-full" style="width: {% widthratio pending_orders total_orders 100 %}%"></div>
+                <div class="bg-yellow-500 h-2 rounded-full" style="width: {% if total_orders > 0 %}{% widthratio pending_orders total_orders 100 %}{% else %}0{% endif %}%"></div>
             </div>
         </div>
 
@@ -103,6 +117,17 @@
             </div>
             <p class="text-xs text-gray-600">{{ out_of_stock }} en rupture</p>
         </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-card">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Sourcing</p>
+                    <h3 class="text-2xl font-bold text-primary">{{ total_sourcing }}</h3>
+                </div>
+                <i class="fas fa-search-dollar text-2xl text-purple-500"></i>
+            </div>
+            <p class="text-xs text-gray-600">{{ pending_sourcing }} en cours</p>
+        </div>
     </div>
 
     <!-- Three Columns: Orders, Sourcing, Users -->
@@ -122,7 +147,11 @@
                             <p class="font-bold text-primary text-sm">{{ order.order_code }}</p>
                             <p class="text-xs text-gray-500">{{ order.user.full_name }}</p>
                         </div>
-                        <span class="text-xs px-2 py-1 rounded-full {% if order.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600{% elif order.status == 'LIVRE' %}bg-green-50 text-action{% else %}bg-blue-50 text-primary{% endif %}">
+                        <span class="text-xs px-2 py-1 rounded-full 
+                            {% if order.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600
+                            {% elif order.status == 'LIVRE' %}bg-green-50 text-action
+                            {% elif order.status == 'PAYE' %}bg-blue-50 text-blue-600
+                            {% else %}bg-purple-50 text-purple-600{% endif %}">
                             {{ order.get_status_display }}
                         </span>
                     </div>
@@ -144,12 +173,15 @@
                 {% for request in recent_sourcing %}
                 <a href="{% url 'admin_module:sourcing_detail_admin' request.id %}" class="block border border-gray-100 rounded-xl p-3 hover:bg-light transition">
                     <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <p class="font-bold text-primary text-sm">{{ request.request_code }}</p>
-                            <p class="text-xs text-gray-700">{{ request.product_name|truncatewords:4 }}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-primary text-sm truncate">{{ request.request_code }}</p>
+                            <p class="text-xs text-gray-700 truncate">{{ request.product_name|truncatewords:4 }}</p>
                             <p class="text-xs text-gray-500 mt-1">{{ request.user.full_name }}</p>
                         </div>
-                        <span class="text-xs px-2 py-1 rounded-full {% if request.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600{% elif request.status == 'VALIDE' %}bg-green-50 text-action{% else %}bg-purple-50 text-purple-600{% endif %}">
+                        <span class="text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2
+                            {% if request.status == 'EN_ATTENTE' %}bg-yellow-50 text-yellow-600
+                            {% elif request.status == 'VALIDE' %}bg-green-50 text-action
+                            {% else %}bg-purple-50 text-purple-600{% endif %}">
                             {{ request.get_status_display }}
                         </span>
                     </div>
@@ -168,17 +200,67 @@
             </div>
             <div class="space-y-3">
                 {% for new_user in recent_users %}
-                <div class="flex items-center gap-3 border border-gray-100 rounded-xl p-3">
+                <div class="flex items-center gap-3 border border-gray-100 rounded-xl p-3 hover:bg-light transition">
                     <img src="https://ui-avatars.com/api/?name={{ new_user.full_name|urlencode }}&background=0F2D52&color=fff&size=40" class="w-10 h-10 rounded-full">
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-gray-800 text-sm truncate">{{ new_user.full_name }}</p>
-                        <p class="text-xs text-gray-500">{{ new_user.city }}</p>
+                        <p class="text-xs text-gray-500 truncate">{{ new_user.city|default:"Ville non spécifiée" }}</p>
+                        <p class="text-xs text-gray-400">{{ new_user.created_at|date:"d/m/Y" }}</p>
                     </div>
+                    <a href="{% url 'admin_module:user_detail_admin' new_user.id %}" class="text-danger hover:text-red-700 text-sm">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
                 {% empty %}
                 <p class="text-sm text-gray-500 text-center py-4">Aucun nouveau</p>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8">
+        <h2 class="text-lg font-bold text-primary mb-4">Actions Rapides</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{% url 'admin_module:payment_verification' %}" class="bg-white rounded-xl p-4 shadow-card hover:shadow-soft transition flex items-center gap-4">
+                <div class="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-credit-card text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-800">Vérifier Paiements</p>
+                    <p class="text-xs text-gray-500">{{ pending_payments }} en attente</p>
+                </div>
+            </a>
+
+            <a href="{% url 'admin_module:order_management' %}" class="bg-white rounded-xl p-4 shadow-card hover:shadow-soft transition flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-box text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-800">Gérer Commandes</p>
+                    <p class="text-xs text-gray-500">{{ pending_orders }} à traiter</p>
+                </div>
+            </a>
+
+            <a href="{% url 'admin_module:sourcing_management' %}" class="bg-white rounded-xl p-4 shadow-card hover:shadow-soft transition flex items-center gap-4">
+                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-search-dollar text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-800">Gérer Sourcing</p>
+                    <p class="text-xs text-gray-500">{{ pending_sourcing }} demandes</p>
+                </div>
+            </a>
+
+            <a href="{% url 'admin_module:user_management' %}" class="bg-white rounded-xl p-4 shadow-card hover:shadow-soft transition flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-gray-800">Voir Utilisateurs</p>
+                    <p class="text-xs text-gray-500">{{ total_users }} clients</p>
+                </div>
+            </a>
         </div>
     </div>
 

@@ -64,15 +64,38 @@ def product_list(request):
 
 def product_detail(request, slug):
     """Product detail page"""
+    from core.models import Currency
+    
     product = get_object_or_404(Product, slug=slug, is_active=True)
     related_products = Product.objects.filter(
         category=product.category,
         is_active=True
     ).exclude(id=product.id)[:4]
     
+    # Get selected currency from session or default to USD
+    currency_code = request.session.get('currency', 'USD')
+    
+    try:
+        selected_currency = Currency.objects.get(code=currency_code, is_active=True)
+    except Currency.DoesNotExist:
+        # Try to get USD as fallback
+        try:
+            selected_currency = Currency.objects.get(code='USD', is_active=True)
+        except Currency.DoesNotExist:
+            # Create USD currency if it doesn't exist
+            selected_currency = Currency.objects.create(
+                code='USD',
+                name='US Dollar',
+                symbol='$',
+                exchange_rate=1.0000,
+                is_base=True,
+                is_active=True
+            )
+    
     context = {
         'product': product,
         'related_products': related_products,
+        'selected_currency': selected_currency,
     }
     return render(request, 'core/product_detail.html', context)
 

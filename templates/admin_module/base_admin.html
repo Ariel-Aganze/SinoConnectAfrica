@@ -1,21 +1,31 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dashboard Admin{% endblock %} - {{ site_settings.site_name }}</title>
+    <title>{% block title %}Admin Dashboard{% endblock %} - SinoConnect Africa</title>
     
+    <!-- Google Fonts : Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
                     colors: {
                         primary: '#0F2D52',
                         action: '#1FA774',
@@ -24,8 +34,8 @@
                         white: '#FFFFFF',
                     },
                     boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.04)',
-                        'card': '0 2px 10px rgba(0,0,0,0.02)',
+                        'card': '0px 4px 20px rgba(0, 0, 0, 0.03)',
+                        'soft': '0px 2px 10px rgba(0, 0, 0, 0.05)',
                     }
                 }
             }
@@ -35,48 +45,127 @@
 </head>
 <body class="font-sans bg-light text-gray-800 antialiased h-screen flex overflow-hidden">
 
+    <!-- OVERLAY MOBILE -->
     <div id="overlay" class="fixed inset-0 bg-primary/50 z-20 hidden lg:hidden"></div>
 
-    {% include 'includes/admin_sidebar.html' %}
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-64 bg-primary text-white flex flex-col h-full fixed lg:relative z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-8 border-b border-white/10">
+            <a href="{% url 'admin_module:dashboard' %}" class="text-xl font-bold flex items-center gap-3">
+                <i class="fas fa-ship text-action text-2xl"></i>
+                <span>SinoConnect</span>
+            </a>
+        </div>
+        
+        <!-- Menu -->
+        <nav class="flex-1 px-4 space-y-2 mt-6 overflow-y-auto">
+            <a href="{% url 'admin_module:dashboard' %}" class="flex items-center gap-3 {% if request.resolver_match.url_name == 'dashboard' %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-th-large w-5"></i> 
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="{% url 'admin_module:order_management' %}" class="flex items-center gap-3 {% if 'order' in request.resolver_match.url_name %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-box w-5"></i> 
+                <span>Commandes</span>
+            </a>
+            
+            <a href="{% url 'admin_module:sourcing_management' %}" class="flex items-center gap-3 {% if 'sourcing' in request.resolver_match.url_name %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-search-dollar w-5"></i> 
+                <span>Sourcing</span>
+            </a>
+            
+            <a href="{% url 'admin_module:payment_verification' %}" class="flex items-center gap-3 {% if 'payment' in request.resolver_match.url_name %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-credit-card w-5"></i> 
+                <span>Paiements</span>
+                {% if pending_payments > 0 %}
+                <span class="ml-auto bg-danger text-white text-xs px-2 py-0.5 rounded-full">{{ pending_payments }}</span>
+                {% endif %}
+            </a>
+            
+            <a href="{% url 'admin_module:user_management' %}" class="flex items-center gap-3 {% if 'user' in request.resolver_match.url_name %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-users w-5"></i> 
+                <span>Utilisateurs</span>
+            </a>
+            
+            <a href="{% url 'admin_module:product_management' %}" class="flex items-center gap-3 {% if 'product' in request.resolver_match.url_name %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-shopping-bag w-5"></i> 
+                <span>Produits</span>
+            </a>
+            
+            <a href="{% url 'admin_module:category_management' %}" class="flex items-center gap-3 {% if 'category' in request.resolver_match.url_name %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-tags w-5"></i> 
+                <span>Catégories</span>
+            </a>
+            
+            <a href="{% url 'admin_module:analytics' %}" class="flex items-center gap-3 {% if request.resolver_match.url_name == 'analytics' %}bg-action text-white shadow-lg{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %} px-4 py-3 rounded-xl font-medium transition duration-200">
+                <i class="fas fa-chart-line w-5"></i> 
+                <span>Analyses</span>
+            </a>
+        </nav>
 
+        <!-- User Info & Logout -->
+        <div class="p-4 border-t border-white/10">
+            <div class="mb-3 px-4 py-3 bg-white/5 rounded-xl">
+                <p class="text-xs text-gray-400 mb-1">Connecté en tant que</p>
+                <p class="text-sm font-semibold text-white truncate">{{ user.full_name }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+            </div>
+            <a href="{% url 'core:logout' %}" class="flex items-center justify-center gap-3 text-gray-300 hover:text-white hover:bg-white/10 px-4 py-3 rounded-xl transition duration-200">
+                <i class="fas fa-sign-out-alt w-5"></i> 
+                <span class="font-medium">Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
         
-        <header class="h-20 bg-white flex items-center justify-between px-6 lg:px-10 z-10 flex-shrink-0 border-b border-gray-100">
+        <!-- TOPBAR -->
+        <header class="h-20 bg-white flex items-center justify-between px-6 lg:px-10 z-10 flex-shrink-0 border-b border-gray-100 shadow-sm">
             <div class="flex items-center gap-4">
-                <button id="menu-btn" class="lg:hidden text-primary text-2xl focus:outline-none">
+                <button id="menu-btn" class="lg:hidden text-primary text-2xl focus:outline-none hover:text-action transition">
                     <i class="fas fa-bars"></i>
                 </button>
                 <h1 class="text-xl font-bold text-primary hidden md:block">{% block page_title %}Dashboard Admin{% endblock %}</h1>
             </div>
 
             <div class="flex items-center gap-4 md:gap-6">
-                <button onclick="window.location.href='{% url 'core:notifications_list' %}'" class="w-10 h-10 rounded-full bg-action/10 text-action flex items-center justify-center relative shadow-card hover:shadow-soft transition">
-                    <i class="far fa-bell"></i>
+                <!-- Notifications -->
+                <button onclick="window.location.href='{% url 'core:notifications_list' %}'" class="relative w-10 h-10 rounded-full bg-action/10 text-action flex items-center justify-center shadow-card hover:shadow-soft hover:bg-action/20 transition">
+                    <i class="far fa-bell text-lg"></i>
                     {% if unread_notifications_count > 0 %}
-                    <span class="absolute top-2 right-2.5 w-2 h-2 bg-danger rounded-full border-2 border-white"></span>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-danger text-white text-xs rounded-full flex items-center justify-center font-bold border-2 border-white">
+                        {{ unread_notifications_count }}
+                    </span>
                     {% endif %}
                 </button>
                 
-                <div class="flex items-center gap-3 bg-white pl-2 pr-4 py-1.5 rounded-full shadow-card cursor-pointer">
-                    <img src="https://ui-avatars.com/api/?name={{ user.full_name|urlencode }}&background=D64545&color=fff" alt="{{ user.full_name }}" class="w-8 h-8 rounded-full">
+                <!-- User Profile -->
+                <div class="flex items-center gap-3 bg-light pl-2 pr-4 py-1.5 rounded-full shadow-card cursor-pointer hover:shadow-soft transition">
+                    <img src="https://ui-avatars.com/api/?name={{ user.full_name|urlencode }}&background=D64545&color=fff&size=128" alt="{{ user.full_name }}" class="w-9 h-9 rounded-full border-2 border-white shadow-sm">
                     <div class="hidden md:block">
-                        <span class="text-sm font-semibold text-primary block">{{ user.full_name }}</span>
+                        <span class="text-sm font-semibold text-primary block leading-tight">{{ user.full_name }}</span>
                         <span class="text-xs text-gray-500">Administrateur</span>
                     </div>
                 </div>
             </div>
         </header>
 
+        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto px-6 lg:px-10 pb-10">
+            
+            <!-- Messages / Alerts -->
             {% if messages %}
             <div class="mt-6 space-y-3">
                 {% for message in messages %}
-                <div class="{% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %} border rounded-xl p-4 flex items-start gap-3">
-                    <i class="{% if message.tags == 'error' %}fas fa-exclamation-circle{% elif message.tags == 'success' %}fas fa-check-circle{% elif message.tags == 'warning' %}fas fa-exclamation-triangle{% else %}fas fa-info-circle{% endif %} text-lg mt-0.5"></i>
+                <div class="bg-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% elif message.tags == 'warning' %}yellow{% else %}blue{% endif %}-50 border-l-4 border-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% elif message.tags == 'warning' %}yellow{% else %}blue{% endif %}-500 text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% elif message.tags == 'warning' %}yellow{% else %}blue{% endif %}-800 px-5 py-4 rounded-r-xl flex items-start gap-3 shadow-card animate-pulse">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} text-xl mt-0.5"></i>
                     <div class="flex-1">
-                        <p class="text-sm font-medium">{{ message }}</p>
+                        <p class="font-medium">{{ message }}</p>
                     </div>
-                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                    <button onclick="this.parentElement.remove()" class="text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% elif message.tags == 'warning' %}yellow{% else %}blue{% endif %}-600 hover:text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% elif message.tags == 'warning' %}yellow{% else %}blue{% endif %}-800 transition">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -84,24 +173,39 @@
             </div>
             {% endif %}
             
+            <!-- Page Content -->
             {% block content %}{% endblock %}
         </main>
     </div>
 
+    <!-- JavaScript -->
     <script>
+        // Mobile menu toggle
         const menuBtn = document.getElementById('menu-btn');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+        if (menuBtn && sidebar && overlay) {
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            });
+
+            overlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            });
         }
 
-        if (menuBtn && sidebar && overlay) {
-            menuBtn.addEventListener('click', toggleSidebar);
-            overlay.addEventListener('click', toggleSidebar);
-        }
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('[class*="bg-red-50"], [class*="bg-green-50"], [class*="bg-yellow-50"], [class*="bg-blue-50"]');
+            messages.forEach(msg => {
+                msg.style.transition = 'opacity 0.5s';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
     </script>
     
     {% block extra_js %}{% endblock %}
